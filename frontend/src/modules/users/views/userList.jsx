@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { Pencil, Trash2, Download, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { useNavigate } from "react-router"
 
 const UserList = () => {
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
     const usersPerPage = 7
@@ -55,7 +57,8 @@ const UserList = () => {
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                     />
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black rounded-md transition-colors">
+                <button onClick={()=> navigate("/admin/registroUsuario")}
+                    className="flex items-center gap-2 px-4 py-2 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black rounded-md transition-colors">
                     <Plus className="w-4 h-4" />
                     Crear
                 </button>
