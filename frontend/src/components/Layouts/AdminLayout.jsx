@@ -46,7 +46,7 @@ export default function AdminLayout() {
                         <h3 className="text-gray-700 font-medium mb-3">Menú</h3>
                         <hr className="border-t border-[var(--color-gris-700)] mb-4" />
                         <nav className="space-y-2">
-                            <a href="/admin/usuarios" className="flex items-center gap-3 px-3 py-2 text-gray-800 hover:bg-cyan-300 rounded-md font-medium">
+                            <a href="/admin/usuarios" className="flex items-center gap-3 px-3 py-2 text-gray-800 hover:bg-cyan-300 rounded-md transition-colors">
                                 <UserRound className="w-4 h-4" />
                                 Usuarios
                             </a>

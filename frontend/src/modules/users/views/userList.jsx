@@ -1,9 +1,12 @@
 import { useState } from "react"
 import { Pencil, Trash2, Download, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { useNavigate } from "react-router"
+import { showConfirmation } from "../../../kernel/alerts"
+import EditUserModal from "./editUser"
 
 const UserList = () => {
     const navigate = useNavigate();
+    const [selectedUser, setSelectedUser] = useState(null);
     const [searchTerm, setSearchTerm] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
     const usersPerPage = 7
@@ -37,6 +40,18 @@ const UserList = () => {
         }
     }
 
+    const [showEditModal, setShowEditModal] = useState(false)
+
+    const handleEditClick = (user) => {
+        setSelectedUser(user)
+        setShowEditModal(true)
+    }
+
+    const handleSaveUser = (updatedUser) => {
+        console.log("Usuario actualizado:", updatedUser)
+        setShowEditModal(false)
+    }
+
     return (
         <div className="max-w-7xl mx-auto">
             <div className="mb-6">
@@ -57,7 +72,7 @@ const UserList = () => {
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                     />
                 </div>
-                <button onClick={()=> navigate("/admin/registroUsuario")}
+                <button onClick={() => navigate("/admin/registroUsuario")}
                     className="flex items-center gap-2 px-4 py-2 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black rounded-md transition-colors">
                     <Plus className="w-4 h-4" />
                     Crear
@@ -88,13 +103,47 @@ const UserList = () => {
                                 </td>
                                 <td className="px-6 py-4 text-center">
                                     <div className="flex items-center justify-center gap-2">
-                                        <button className="bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors">
+                                        <button
+                                            onClick={() => handleEditClick(user)}
+                                            className="bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors">
                                             <Pencil size={16} />
                                         </button>
-                                        <button className="bg-[var(--color-azul-400)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors">
+                                        <button
+
+                                            onClick={() => {
+                                                const newStatus = user.status === "Active" ? "Inactive" : "Active";
+                                                setSelectedUser(user);
+                                                showConfirmation(
+                                                    "Cambiar estatus",
+                                                    `¿Deseas cambiar el estatus de ${user.name} a ${newStatus}?`,
+                                                    "question",
+                                                    () => {
+                                                        console.log(`Estatus de ${user.name} cambiado a ${newStatus}`);
+                                                    },
+                                                    () => {
+                                                        console.log("Cambio cancelado");
+                                                    }
+                                                );
+                                            }}
+
+                                            className="bg-[var(--color-azul-400)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors">
                                             <Download size={16} />
                                         </button>
-                                        <button className="bg-[var(--color-azul-200)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedUser(user);
+                                                showConfirmation(
+                                                    "¿Eliminar usuario?",
+                                                    `¿Estás segura/o de que deseas eliminar a ${user.name}?`, "warning",
+                                                    () => {
+                                                        console.log("Usuario eliminado:", user);
+                                                    },
+                                                    () => {
+                                                        console.log("Cancelado");
+                                                    }
+                                                );
+                                            }}
+                                            className="bg-[var(--color-azul-200)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -118,8 +167,8 @@ const UserList = () => {
                         key={i}
                         onClick={() => changePage(i + 1)}
                         className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${currentPage === i + 1
-                                ? "bg-[var(--color-azul-600)] text-white"
-                                : "border border-gray-300 hover:bg-gray-100"
+                            ? "bg-[var(--color-azul-600)] text-white"
+                            : "border border-gray-300 hover:bg-gray-100"
                             }`}
                     >
                         {i + 1}
@@ -132,6 +181,14 @@ const UserList = () => {
                     <ChevronRight />
                 </button>
             </div>
+            
+            {showEditModal && (
+                <EditUserModal
+                    user={selectedUser}
+                    onClose={() => setShowEditModal(false)}
+                    onSave={handleSaveUser}
+                />
+            )}
         </div>
     )
 }

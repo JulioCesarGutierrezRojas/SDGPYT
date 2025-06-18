@@ -19,6 +19,7 @@
     "react-router-dom": "^7.6.2",
     "react-transition-group": "^4.4.5",
     "sweetalert2": "^11.22.0",
+    "sweetalert2-react-content": "^5.1.0",
     "tailwindcss": "^4.1.8"
   },
   "devDependencies": {
