@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   /* Paleta azul personalizada */
   --color-azul-100: #DBF7FF;
   --color-azul-200: #C5F1FE;
