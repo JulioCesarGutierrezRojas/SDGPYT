@@ -1,5 +1,6 @@
 package com.praga.backend.security.jwt;
 
+import com.praga.backend.modules.users.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -32,15 +33,13 @@ public class JwtProvider {
         return claimsResolver.apply(claims);
     }
 
-    /*public String generateToken(UserDetails userDetails, User user) {
+    public String generateToken(UserDetails userDetails, User user){
         return generateToken(new HashMap<>(), userDetails, user);
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, User user) {
-        extraClaims.put("username", user.getUsername());
-        extraClaims.put("roles", user.getRoles());
-        extraClaims.put("fullName", user.getPerson().getName() + " " + user.getPerson().getSurname());
-        extraClaims.put("idUser", user.getId());
+        extraClaims.put("name", user.getName());
+        extraClaims.put("idUser", user.getUserId());
         return Jwts
                 .builder()
                 .claims(extraClaims)
@@ -49,7 +48,7 @@ public class JwtProvider {
                 .expiration(new Date(new Date().getTime() + expiration * 1000L))
                 .signWith(getSingKey(), Jwts.SIG.HS256)
                 .compact();
-    }*/
+    }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
@@ -57,7 +56,6 @@ public class JwtProvider {
     }
 
     private boolean isTokenExpired(String token) {
-
         return extractExpiration(token).before(new Date());
     }
 

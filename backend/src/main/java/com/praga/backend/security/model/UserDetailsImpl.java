@@ -1,30 +1,42 @@
 package com.praga.backend.security.model;
 
+import com.praga.backend.modules.projects.model.ProjectUser;
+import com.praga.backend.modules.users.model.Role;
+import com.praga.backend.modules.users.model.User;
 import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Builder
 public class UserDetailsImpl implements UserDetails {
     private String username;
     private String password;
+    private boolean blocked;
+    private boolean enabled;
     private Collection<? extends GrantedAuthority> authorities;
 
-    /*public static UserDetailsImpl build(Employee employee) {
+    public static UserDetailsImpl build(User user) {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        Rol rol = employee.getRol();
-        authorities.add(new SimpleGrantedAuthority(rol.getRol().name()));
+        List<ProjectUser> projectUsers = user.getProjectUsers();
+        if (projectUsers != null){
+            for (ProjectUser pu : projectUsers) {
+                Role role = pu.getRole();
+                authorities.add(new SimpleGrantedAuthority(role.name()));
+            }
+        }
 
         return UserDetailsImpl.builder()
-                .username(employee.getEmail())
-                .password(employee.getPassword())
+                .username(user.getEmail())
+                .password(user.getPassword())
                 .authorities(authorities)
                 .build();
-    }*/
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -47,7 +59,17 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     @Override
+    public boolean isAccountNonLocked() {
+        return blocked;
+    }
+
+    @Override
     public boolean isCredentialsNonExpired() {
         return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
     }
 }
