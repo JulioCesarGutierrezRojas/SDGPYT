@@ -3,12 +3,14 @@ package com.praga.backend.modules.users.service;
 
 import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
+import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
 import com.praga.backend.modules.users.controller.dto.UserDto;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
     private final IUserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public ResponseEntity<Object> getAllUsers() {
@@ -70,5 +73,23 @@ public class UserService {
         user.setStatus(!user.getStatus());
         userRepository.save(user);
         return new ResponseEntity<>(new ApiResponse<>(user, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
+    }
+
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> updateUser(UpdateUserDto dto){
+        User foundUser = userRepository.findById(dto.getId()).orElse(null);
+
+        if (Objects.isNull(foundUser))
+            return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "No existe el usuario."), HttpStatus.NOT_FOUND);
+
+        foundUser.setName(dto.getName());
+        foundUser.setLastname(dto.getLastname());
+        foundUser.setEmail(dto.getEmail());
+        foundUser.setPhoneNumber(dto.getPhoneNumber());
+        foundUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        userRepository.save(foundUser);
+
+        return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
     }
 }
