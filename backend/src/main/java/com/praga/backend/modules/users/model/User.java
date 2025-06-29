@@ -41,9 +41,11 @@ public class User extends Auditable {
     private String token;
 
     @Column(name = "date_expiration", columnDefinition = "TIMESTAMP")
+    @Temporal(TemporalType.TIMESTAMP)
     private Date dateExpiration;
 
     @Column(name = "time_blocked", columnDefinition = "TIMESTAMP")
+    @Temporal(TemporalType.TIMESTAMP)
     private Date timeBlocked;
 
     @Column(name = "attempts", columnDefinition = "INT DEFAULT 0")
