@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -38,8 +39,15 @@ public class JwtProvider {
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, User user) {
+        List<String> roles = user.getProjectUsers()
+                .stream()
+                .map(pu -> pu.getRole().name())
+                .distinct()
+                .toList();
+
         extraClaims.put("name", user.getName());
         extraClaims.put("idUser", user.getUserId());
+        extraClaims.put("roles", roles);
         return Jwts
                 .builder()
                 .claims(extraClaims)
