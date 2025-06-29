@@ -3,12 +3,14 @@ package com.praga.backend.modules.users.service;
 
 import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
+import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.controller.dto.UserDto;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
     private final IUserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public ResponseEntity<Object> getAllUsers() {
@@ -70,5 +73,19 @@ public class UserService {
         user.setStatus(!user.getStatus());
         userRepository.save(user);
         return new ResponseEntity<>(new ApiResponse<>(user, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
+    }
+
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> saveUser(SaveUserDto dto) {
+        User foundUser = userRepository.findByEmail(dto.getEmail()).orElse(null);
+
+        if (!Objects.isNull(foundUser))
+            return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "Ese correo ya esta en uso."), HttpStatus.BAD_REQUEST);
+
+        User user = new User(dto.getName(), dto.getLastname(), dto.getEmail(), dto.getPhoneNumber(), passwordEncoder.encode(dto.getPassword()));
+        user.setStatus(true);
+        userRepository.save(user);
+
+        return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario registrado correctamente"), HttpStatus.OK);
     }
 }

@@ -48,7 +48,7 @@ public class User extends Auditable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date timeBlocked;
 
-    @Column(name = "attempts", columnDefinition = "INT DEFAULT 0")
+    @Column(name = "attempts", columnDefinition = "INT DEFAULT 0", nullable = false)
     private Integer attempts;
 
     @Column(name = "status", columnDefinition = "BOOLEAN DEFAULT true", nullable = false)
@@ -61,4 +61,12 @@ public class User extends Auditable {
     @OneToMany(mappedBy = "userId")
     @JsonIgnore
     private List<ProjectUser> projectUsers;
+
+    public User (String name, String lastname, String email, String phoneNumber, String password){
+        this.name = name;
+        this.lastname = lastname;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.password = password;
+    }
 }

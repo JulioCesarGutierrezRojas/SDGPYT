@@ -1,5 +1,6 @@
 package com.praga.backend.modules.users.controller;
 
+import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,5 +33,11 @@ public class UserController {
     @Operation(summary = "status del usuario", description = "Actualiza el status")
     public ResponseEntity<Object> changeUserStatus(@Validated @RequestBody Long id) {
         return userService.changeUserStatus(id);
+    }
+
+    @PostMapping("/")
+    @Operation(summary = "Crear un nuevo usuario", description = "Crea un nuevo usuario en el sistema")
+    public ResponseEntity<Object> saveUser(@Validated @RequestBody SaveUserDto saveUserDto) {
+        return userService.saveUser(saveUserDto);
     }
 }
