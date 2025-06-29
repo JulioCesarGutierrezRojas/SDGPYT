@@ -84,6 +84,7 @@ public class UserService {
 
         User user = new User(dto.getName(), dto.getLastname(), dto.getEmail(), dto.getPhoneNumber(), passwordEncoder.encode(dto.getPassword()));
         user.setStatus(true);
+        user.setAttempts(0);
         userRepository.save(user);
 
         return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario registrado correctamente"), HttpStatus.OK);
