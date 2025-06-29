@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 
 public class UserDto {
     @NotNull(message = "El id es obligatorio")
-    private int userId;
+    private Long userId;
 
     @NotNull(message = "El nombre es obligatorio")
     private String name;

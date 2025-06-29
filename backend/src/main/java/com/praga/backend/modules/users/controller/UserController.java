@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,10 +22,15 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/")
     @Operation(summary = "Obtener un usuario por ID", description = "Devuelve un usuario específico por su ID")
-    public ResponseEntity<Object> getUserById(@PathVariable Long id) {
+    public ResponseEntity<Object> getUserById(@Validated @RequestBody Long id) {
         return userService.getUserById(id);
     }
 
+    @PatchMapping("/")
+    @Operation(summary = "status del usuario", description = "Actualiza el status")
+    public ResponseEntity<Object> changeUserStatus(@Validated @RequestBody Long id) {
+        return userService.changeUserStatus(id);
+    }
 }

@@ -7,10 +7,13 @@ import com.praga.backend.modules.users.controller.dto.UserDto;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,7 +44,7 @@ public class UserService {
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             UserDto userDto = new UserDto(
-                    user.getUserId().intValue(),
+                    user.getUserId().longValue(),
                     user.getName(),
                     user.getLastname(),
                     user.getEmail(),
@@ -58,5 +61,14 @@ public class UserService {
         }
     }
 
-
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> changeUserStatus(Long id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (Objects.isNull(user)) {
+            return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "No existe el usuario."), HttpStatus.NOT_FOUND);
+        }
+        user.setStatus(!user.getStatus());
+        userRepository.save(user);
+        return new ResponseEntity<>(new ApiResponse<>(user, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
+    }
 }
