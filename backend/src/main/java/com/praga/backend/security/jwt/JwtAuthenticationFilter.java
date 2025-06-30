@@ -1,5 +1,6 @@
 package com.praga.backend.security.jwt;
 
+import com.praga.backend.modules.auth.service.BlacklistService;
 import com.praga.backend.security.service.UserDetailsServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -28,14 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
     private final UserDetailsServiceImpl userDetailsService;
     private final HandlerExceptionResolver handlerExceptionResolver;
-
-    private String getToken(HttpServletRequest request) {
-        String headers = request.getHeader("Authorization");
-        if (headers != null && headers.startsWith("Bearer")) {
-            return headers.replace("Bearer ", "");
-        }
-        return null;
-    }
+    private final BlacklistService blacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -45,11 +39,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException, UsernameNotFoundException {
         try{
             final String username;
-            String jwt = getToken(request);
+            String jwt = jwtProvider.resolveToken(request);
 
             if (jwt != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (!jwtProvider.validateToken(jwt)) {
+                    filterChain.doFilter(request, response);
+                     return;
+                }
+
+                if (blacklistService.isBlacklisted(jwt)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
+
                 username = jwtProvider.extractUsername(jwt);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
                 if (jwtProvider.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
