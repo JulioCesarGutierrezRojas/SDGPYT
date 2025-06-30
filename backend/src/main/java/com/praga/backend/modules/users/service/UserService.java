@@ -3,7 +3,9 @@ package com.praga.backend.modules.users.service;
 
 import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
-import com.praga.backend.modules.users.controller.dto.UserDto;
+import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
+import com.praga.backend.modules.users.controller.dto.GetUserDto;
+import com.praga.backend.modules.users.controller.dto.GetUsersDto;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
 import lombok.RequiredArgsConstructor;
@@ -26,49 +28,53 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public ResponseEntity<Object> getAllUsers() {
-        List<UserDto> users = userRepository.findAll()
+        List<GetUsersDto> users = userRepository.findAll()
                 .stream()
-                .map(user -> new UserDto(
-                        //falta aqi
+                .map(user -> new GetUsersDto(
+                        user.getUserId(),
+                        user.getName(),
+                        user.getLastname(),
+                        user.getEmail(),
+                        user.getPhoneNumber(),
+                        user.getStatus()
                 ))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(
-                new ApiResponse<>(users, TypesResponse.SUCCESS, "Lista de usuarios obtenida correctamente")
+        return new ResponseEntity<>(
+                new ApiResponse<>(users, TypesResponse.SUCCESS, "Lista de usuarios obtenida correctamente"), HttpStatus.OK
         );
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<Object> getUserById(Long id) {
-        Optional<User> optionalUser = userRepository.findById(id);
+    public ResponseEntity<Object> getUserById(GetUserDto dto) {
+        Optional<User> optionalUser = userRepository.findById(dto.getId());
 
         if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            UserDto userDto = new UserDto(
-                    user.getUserId().longValue(),
-                    user.getName(),
-                    user.getLastname(),
-                    user.getEmail(),
-                    Integer.parseInt(user.getPhoneNumber()),
-                    "ROL_NO_DEFINIDO" 
+            GetUsersDto user = new GetUsersDto(
+                    optionalUser.get().getUserId(),
+                    optionalUser.get().getName(),
+                    optionalUser.get().getLastname(),
+                    optionalUser.get().getEmail(),
+                    optionalUser.get().getPhoneNumber(),
+                    optionalUser.get().getStatus()
             );
-            return ResponseEntity.ok(
-                    new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Usuario encontrado correctamente")
+            return new ResponseEntity<>(
+                    new ApiResponse<>(user, TypesResponse.SUCCESS, "Usuario encontrado correctamente"), HttpStatus.OK
             );
         } else {
-            return ResponseEntity.status(404).body(
-                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no encontrado")
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no encontrado"), HttpStatus.NOT_FOUND
             );
         }
     }
 
     @Transactional(rollbackFor = {SQLException.class})
-    public ResponseEntity<Object> changeUserStatus(Long id) {
-        User user = userRepository.findById(id).orElse(null);
+    public ResponseEntity<Object> changeUserStatus(ChangeStatusUserDto dto) {
+        User user = userRepository.findById(dto.getId()).orElse(null);
         if (Objects.isNull(user)) {
             return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "No existe el usuario."), HttpStatus.NOT_FOUND);
         }
         user.setStatus(!user.getStatus());
         userRepository.save(user);
-        return new ResponseEntity<>(new ApiResponse<>(user, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
     }
 }

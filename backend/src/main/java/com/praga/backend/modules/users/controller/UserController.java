@@ -1,5 +1,7 @@
 package com.praga.backend.modules.users.controller;
 
+import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
+import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,13 +26,13 @@ public class UserController {
 
     @GetMapping("/")
     @Operation(summary = "Obtener un usuario por ID", description = "Devuelve un usuario específico por su ID")
-    public ResponseEntity<Object> getUserById(@Validated @RequestBody Long id) {
-        return userService.getUserById(id);
+    public ResponseEntity<Object> getUserById(@Validated @RequestBody GetUserDto dto) {
+        return userService.getUserById(dto);
     }
 
     @PatchMapping("/")
     @Operation(summary = "status del usuario", description = "Actualiza el status")
-    public ResponseEntity<Object> changeUserStatus(@Validated @RequestBody Long id) {
-        return userService.changeUserStatus(id);
+    public ResponseEntity<Object> changeUserStatus(@Validated @RequestBody ChangeStatusUserDto dto) {
+        return userService.changeUserStatus(dto);
     }
 }
