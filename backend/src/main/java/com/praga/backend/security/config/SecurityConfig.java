@@ -2,6 +2,8 @@ package com.praga.backend.security.config;
 
 import com.praga.backend.security.jwt.JwtAuthenticationFilter;
 import com.praga.backend.security.jwt.JwtEntryPoint;
+import com.praga.backend.security.jwt.JwtLogout;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,6 +32,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
     private final JwtEntryPoint jwtEntryPoint;
+    private final JwtLogout jwtLogout;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -65,6 +68,13 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jwtEntryPoint)
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .addLogoutHandler(jwtLogout)
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                        }).permitAll()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
