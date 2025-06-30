@@ -7,7 +7,7 @@ export default function AdminLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen relative overflow-visible">
 
             <div className={`${sidebarOpen ? "w-64" : "w-16"} bg-[var(--color-azul-200)] flex flex-col transition-all duration-300`}>
 
