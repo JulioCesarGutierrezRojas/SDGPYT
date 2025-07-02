@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class UserDto {
+public class GetUsersDto {
     @NotNull(message = "El id es obligatorio")
     private Long userId;
 
@@ -24,9 +24,9 @@ public class UserDto {
     private String email;
 
     @NotNull(message = "El numero de telefono es obligatorio")
-    private int phoneNumber;
+    private String phoneNumber;
 
-    @NotNull(message = "El Rol es obligatorio")
-    private String role;
+    @NotNull(message = "El Status es obligatorio")
+    private Boolean status;
 
 }

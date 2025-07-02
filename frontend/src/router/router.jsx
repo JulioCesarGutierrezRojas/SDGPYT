@@ -5,6 +5,7 @@ import UserList from "../modules/users/views/userList";
 import UserRegister from "../modules/users/views/userRegister";
 import ForgotPassword from "../modules/auth/views/ForgotPassword";
 import Register from "../modules/auth/views/Register"; 
+import UserProfile from "../modules/auth/views/profile/UserProfile";
 
 const AppRouter = () => {
   return (
@@ -17,6 +18,7 @@ const AppRouter = () => {
         <Route path="/admin" element={<AdminLayout/>}>
           <Route path="usuarios" element={<UserList />} />
           <Route path="registroUsuario" element={<UserRegister />} />
+          <Route path="perfil" element={<UserProfile />} />
         </Route>
 
         {/*<Route path="*" element={<NotFound />} />*/}
