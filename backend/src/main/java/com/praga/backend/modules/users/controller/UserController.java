@@ -1,5 +1,6 @@
 package com.praga.backend.modules.users.controller;
 
+import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
 import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.service.UserService;
@@ -34,5 +35,11 @@ public class UserController {
     @Operation(summary = "status del usuario", description = "Actualiza el status")
     public ResponseEntity<Object> changeUserStatus(@Validated @RequestBody ChangeStatusUserDto dto) {
         return userService.changeUserStatus(dto);
+    }
+
+    @PutMapping("/")
+    @Operation(summary = "Actualizar usuario", description = "Actualiza la información de un usuario existente")
+    public ResponseEntity<Object> updateUser(@Validated @RequestBody UpdateUserDto userDto) {
+        return userService.updateUser(userDto);
     }
 }
