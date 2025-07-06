@@ -16,9 +16,11 @@ public class ProjectUser {
     private Long projectUserId;
 
     @ManyToOne
+    @JoinColumn(name = "project_id_project_id")
     private Project projectId;
 
     @ManyToOne
+    @JoinColumn(name = "user_id_user_id")
     private User userId;
 
     @Enumerated(EnumType.STRING)

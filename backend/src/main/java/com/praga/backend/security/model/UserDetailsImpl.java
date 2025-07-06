@@ -34,6 +34,8 @@ public class UserDetailsImpl implements UserDetails {
         return UserDetailsImpl.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
+                .blocked(user.getStatus())
+                .enabled(user.getStatus())
                 .authorities(authorities)
                 .build();
     }
