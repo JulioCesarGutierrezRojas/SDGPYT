@@ -3,6 +3,7 @@ package com.praga.backend.modules.users.service;
 
 import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
+import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
 import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
@@ -82,6 +83,20 @@ public class UserService {
     }
 
     @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> saveUser(SaveUserDto dto) {
+        User foundUser = userRepository.findByEmail(dto.getEmail()).orElse(null);
+
+        if (!Objects.isNull(foundUser))
+            return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "Ese correo ya esta en uso."), HttpStatus.BAD_REQUEST);
+
+        User user = new User(dto.getName(), dto.getLastname(), dto.getEmail(), dto.getPhoneNumber(), passwordEncoder.encode(dto.getPassword()));
+        user.setStatus(true);
+        user.setAttempts(0);
+        userRepository.save(user);
+
+        return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario registrado correctamente"), HttpStatus.OK);
+    }
+
     public ResponseEntity<Object> updateUser(UpdateUserDto dto){
         User foundUser = userRepository.findById(dto.getId()).orElse(null);
 
