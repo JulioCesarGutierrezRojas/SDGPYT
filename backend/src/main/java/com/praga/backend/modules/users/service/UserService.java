@@ -4,6 +4,7 @@ package com.praga.backend.modules.users.service;
 import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
 import com.praga.backend.modules.users.controller.dto.SaveUserDto;
+import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
 import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersDto;
@@ -94,5 +95,22 @@ public class UserService {
         userRepository.save(user);
 
         return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario registrado correctamente"), HttpStatus.OK);
+    }
+
+    public ResponseEntity<Object> updateUser(UpdateUserDto dto){
+        User foundUser = userRepository.findById(dto.getId()).orElse(null);
+
+        if (Objects.isNull(foundUser))
+            return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "No existe el usuario."), HttpStatus.NOT_FOUND);
+
+        foundUser.setName(dto.getName());
+        foundUser.setLastname(dto.getLastname());
+        foundUser.setEmail(dto.getEmail());
+        foundUser.setPhoneNumber(dto.getPhoneNumber());
+        foundUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        userRepository.save(foundUser);
+
+        return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
     }
 }
