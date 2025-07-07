@@ -1,14 +1,21 @@
 package com.praga.backend.modules.projects.controller.dto;
 
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class SaveProjectDto {
+    @NotNull(message = "El id es obligatorio")
     private String name;
+
+    @NotNull(message = "las siglas son obligatorias")
     private String abbreviation;
+
+    @NotNull(message = "la descripcion es obligatoria")
     private String description;
+
     private Boolean status;
 }
