@@ -91,7 +91,6 @@ public class ProjectService {
         project.setName(dto.getName());
         project.setAbbreviation(dto.getAbbreviation());
         project.setDescription(dto.getDescription());
-        project.setStatus(dto.getStatus() != null ? dto.getStatus() : project.getStatus());
 
         projectRepository.save(project);
 
@@ -99,6 +98,19 @@ public class ProjectService {
                 new ApiResponse<>(null, TypesResponse.SUCCESS, "Proyecto actualizado correctamente."),
                 HttpStatus.OK
         );
+    }
+
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> changeProjectStatus(UpdateProjectDto dto) {
+        Project project = projectRepository.findById(dto.getId()).orElse(null);
+        if (Objects.isNull(project)) {
+            return new ResponseEntity<>(
+            new ApiResponse<>(null, TypesResponse.WARNING, "No se encontró el proyecto con ID: " + dto.getId()), HttpStatus.NOT_FOUND);
+        }
+        project.setStatus(!project.getStatus());
+        projectRepository.save(project);
+        return new ResponseEntity<>(
+                new ApiResponse<>(null, TypesResponse.SUCCESS, "Estado del proyecto actualizado correctamente"), HttpStatus.OK);
     }
 
 }

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -32,6 +33,12 @@ public class ProjectController {
     @Operation(summary = "Actualizar proyectos", description = "actualiza los proyectos")
     public ResponseEntity<Object> updateProject(@RequestBody UpdateProjectDto dto) {
         return projectService.updateProject(dto);
+    }
+
+    @PatchMapping("/changestatus")
+    @Operation(summary = "status del proyecto", description = "Actualiza el proyecto")
+    public ResponseEntity<Object> changeProjectStatus(@Validated @RequestBody UpdateProjectDto dto) {
+        return projectService.changeProjectStatus(dto);
     }
 
 }
