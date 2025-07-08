@@ -23,6 +23,12 @@ public class ProjectController {
         return projectService.getAllProjects();
     }
 
+    @GetMapping("/projectbyadmin")
+    @Operation(summary = "Obtener todos los proyectos para admin", description = "Lista todos los proyectos del sistema admin")
+    public ResponseEntity<Object> getProjectsByAdmin() {
+        return projectService.getProjectsByAdminRole();
+    }
+
     @PostMapping("/create")
     @Operation(summary = "Crear proyectos", description = "Creación de proyectos")
     public ResponseEntity<Object> createProject(@RequestBody SaveProjectDto dto) {

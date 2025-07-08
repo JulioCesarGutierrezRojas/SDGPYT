@@ -6,7 +6,9 @@ import com.praga.backend.modules.projects.controller.dto.GetProjectsDto;
 import com.praga.backend.modules.projects.controller.dto.SaveProjectDto;
 import com.praga.backend.modules.projects.controller.dto.UpdateProjectDto;
 import com.praga.backend.modules.projects.model.IProjectRepository;
+import com.praga.backend.modules.projects.model.IProjectUserRepository;
 import com.praga.backend.modules.projects.model.Project;
+import com.praga.backend.modules.users.model.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectService {
     private final IProjectRepository projectRepository;
+    private final IProjectUserRepository iProjectUserRepository;
 
     @Transactional(readOnly = true)
     public ResponseEntity<Object> getAllProjects() {
@@ -40,7 +43,26 @@ public class ProjectService {
         return new ResponseEntity<>(
                 new ApiResponse<>(projects, TypesResponse.SUCCESS, "Lista de proyectos obtenida correctamente"), HttpStatus.OK);
     }
+//Para solo admin
+    @Transactional(readOnly = true)
+    public ResponseEntity<Object> getProjectsByAdminRole() {
+        List<Project> projects = iProjectUserRepository.findProjectsByRole(Role.ADMIN);
 
+        List<GetProjectsDto> result = projects.stream()
+                .map(p -> new GetProjectsDto(
+                        p.getProjectId(),
+                        p.getName(),
+                        p.getAbbreviation(),
+                        p.getDescription(),
+                        p.getStatus()
+                ))
+                .collect(Collectors.toList());
+
+        return new ResponseEntity<>(
+                new ApiResponse<>(result, TypesResponse.SUCCESS, "Proyectos de administradores obtenidos correctamente."),
+                HttpStatus.OK
+        );
+    }
 
     @Transactional(rollbackFor = {SQLException.class})
     public ResponseEntity<Object> saveProject(SaveProjectDto dto) {
