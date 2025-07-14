@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
-import EditFieldModal from "./EditFieldModal"; // Modal para editar campos
-import Toggle from "./ToggleSwitch"; // Componente personalizado para el switch
+import EditFieldModal from "./EditFieldModal";
+import EstatusBadge from "./EstatusBadge";
 
 const UserProfile = () => {
     const [user, setUser] = useState({
@@ -11,7 +11,7 @@ const UserProfile = () => {
         telefono: "123-456-7890",
         contraseña: "••••••••",
         rol: "Administrador",
-        status: true,
+        estatus: "Habilitado",
     });
 
     const [selectedField, setSelectedField] = useState(null);
@@ -27,6 +27,11 @@ const UserProfile = () => {
         setShowModal(false);
     };
 
+    const toggleStatus = () => {
+        const nuevo = user.estatus === "Habilitado" ? "Deshabilitado" : "Habilitado";
+        setUser({ ...user, estatus: nuevo });
+    };
+
     const fieldLabels = {
         nombre: "Nombre",
         apellido: "Apellido",
@@ -38,31 +43,24 @@ const UserProfile = () => {
 
     return (
         <>
-            {/* Aquí aplicamos el blur y opacidad SOLO al fondo */}
-            <div className={`max-w-3xl mx-auto mt-10 transition-all duration-300 ${showModal ? 'blur-sm opacity-60 pointer-events-none' : ''}`}>
-                {/* Título */}
-                <h1 className="text-2xl font-bold text-gray-800 mb-6">Perfil</h1>
+            <div className={`max-w-4xl mx-auto px-4 py-4 transition-all duration-300 ${showModal ? 'blur-sm opacity-60 pointer-events-none' : ''}`}>
+                <h1 className="text-2xl font-bold text-gray-800 mb-4">Perfil</h1>
 
-                {/* Foto de perfil y nombre */}
-                <div className="flex flex-col items-center mb-8">
+                <div className="flex flex-col items-center mb-6">
                     <div className="w-28 h-28 rounded-full bg-gray-200 flex items-center justify-center text-4xl text-gray-500">
-                        {/* Podrías poner una imagen aquí */}
                         📷
                     </div>
-                    <h2 className="mt-4 text-xl font-semibold">{`${user.nombre} ${user.apellido}`}</h2>
+                    <h2 className="mt-3 text-xl font-semibold text-center">{`${user.nombre} ${user.apellido}`}</h2>
                 </div>
 
-                {/* Tabla de datos */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <table className="w-full">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+                    <table className="w-full text-sm">
                         <tbody className="divide-y divide-gray-200">
                             {Object.entries(fieldLabels).map(([key, label]) => (
                                 <tr key={key} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{label}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-700">
-                                        {key === "contraseña" ? "••••••••" : user[key]}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{label}</td>
+                                    <td className="px-4 py-3 text-gray-700">{key === "contraseña" ? "••••••••" : user[key]}</td>
+                                    <td className="px-4 py-3 text-right">
                                         <button
                                             onClick={() => handleEditClick(key)}
                                             className="bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors"
@@ -73,16 +71,11 @@ const UserProfile = () => {
                                 </tr>
                             ))}
 
-                            {/* Status con switch */}
+                            {/* Estatus con badge */}
                             <tr className="hover:bg-gray-50">
-                                <td className="px-6 py-4 text-sm font-medium text-gray-900">Status</td>
-                                <td className="px-6 py-4">
-                                    <Toggle
-                                        isOn={user.status}
-                                        handleToggle={() =>
-                                            setUser({ ...user, status: !user.status })
-                                        }
-                                    />
+                                <td className="px-4 py-3 font-medium text-gray-900">Estatus</td>
+                                <td className="px-4 py-3">
+                                    <EstatusBadge estatus={user.estatus} onClick={toggleStatus} />
                                 </td>
                                 <td></td>
                             </tr>
@@ -91,7 +84,6 @@ const UserProfile = () => {
                 </div>
             </div>
 
-            {/* Modal DEBE estar fuera del div anterior para no tomar el blur/opacidad */}
             {showModal && selectedField && (
                 <EditFieldModal
                     fieldKey={selectedField}
