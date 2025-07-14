@@ -14,7 +14,7 @@ const proyectosDummy = [
     id: 2,
     nombre: "Sistema de Reservas",
     abreviacion: "SR",
-    descripcion: "App para hoteles",
+    descripcion: "App para hoteles en Morelos",
     estatus: "Deshabilitado",
   },
 ];
