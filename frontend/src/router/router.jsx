@@ -7,6 +7,7 @@ import ForgotPassword from "../modules/auth/views/ForgotPassword";
 import Register from "../modules/auth/views/Register"; 
 import UserProfile from "../modules/auth/views/profile/UserProfile";
 import ProjectsAdmin from "../modules/users/projectsAdmin";
+import ListarCategoriasTotales from "../modules/admin/views/ListarCategoriasTotales";
 
 const AppRouter = () => {
   return (
@@ -21,6 +22,7 @@ const AppRouter = () => {
           <Route path="registroUsuario" element={<UserRegister />} />
           <Route path="perfil" element={<UserProfile />} />
           <Route path="proyectos" element={<ProjectsAdmin />} />
+          <Route path="categorias" element={<ListarCategoriasTotales />} />
         </Route>
 
         {/*<Route path="*" element={<NotFound />} />*/}
