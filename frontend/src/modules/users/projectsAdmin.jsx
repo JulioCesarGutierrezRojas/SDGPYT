@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import ModalCrearProyecto from "../../components/ModalCrearProyecto";
 
 const proyectosDummy = [
   {
@@ -23,6 +24,7 @@ export default function ProjectsAdmin() {
   const [proyectos, setProyectos] = useState(proyectosDummy);
   const [busqueda, setBusqueda] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
+  const [modalAbierto, setModalAbierto] = useState(false);
   const proyectosPorPagina = 5;
 
   const proyectosFiltrados = proyectos.filter((proyecto) =>
@@ -39,6 +41,14 @@ export default function ProjectsAdmin() {
     if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
       setPaginaActual(nuevaPagina);
     }
+  };
+
+  const handleGuardarProyecto = (nuevoProyecto) => {
+    setProyectos((prev) => [
+      ...prev,
+      { ...nuevoProyecto, id: Date.now() }, // Asignamos un ID único
+    ]);
+    setModalAbierto(false);
   };
 
   return (
@@ -65,7 +75,10 @@ export default function ProjectsAdmin() {
           />
         </div>
 
-        <button className="flex items-center gap-2 px-4 py-2 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black rounded-md transition-colors">
+        <button
+          onClick={() => setModalAbierto(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black rounded-md transition-colors"
+        >
           <Plus className="w-4 h-4" />
           Crear
         </button>
@@ -137,6 +150,14 @@ export default function ProjectsAdmin() {
           <ChevronRight />
         </button>
       </div>
+
+      {/* Modal Crear Proyecto */}
+      {modalAbierto && (
+        <ModalCrearProyecto
+          onClose={() => setModalAbierto(false)}
+          onGuardar={handleGuardarProyecto}
+        />
+      )}
     </div>
   );
 }
