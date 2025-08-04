@@ -23,8 +23,8 @@ const ModalDetalleTarea = ({ tarea, onClose, onEliminar, onGuardar }) => {
   if (!tarea) return null;
 
   return (
-    <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative border border-[var(--color-azul-300)]">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-lg border border-[var(--color-azul-300)] w-full max-w-md p-6 relative">
         {/* Botón cerrar */}
         <button
           className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
