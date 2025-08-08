@@ -1,6 +1,7 @@
 package com.praga.backend.modules.categories.controller;
 
 import com.praga.backend.modules.categories.controller.dto.GetCategoriesByProjectDto;
+import com.praga.backend.modules.categories.controller.dto.UpdateCategoryDto;
 import com.praga.backend.modules.categories.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,5 +29,11 @@ public class CategoryController {
     @Operation(summary = "Obtener categorías por proyecto", description = "Lista todas las categorías utilizadas en las tareas de un proyecto específico")
     public ResponseEntity<Object> getCategoriesByProject(@Validated @RequestBody GetCategoriesByProjectDto dto) {
         return categoryService.getCategoriesByProject(dto);
+    }
+    
+    @PutMapping("/")
+    @Operation(summary = "Actualizar categoría", description = "Actualiza la información de una categoría existente")
+    public ResponseEntity<Object> updateCategory(@Validated @RequestBody UpdateCategoryDto dto) {
+        return categoryService.updateCategory(dto);
     }
 }

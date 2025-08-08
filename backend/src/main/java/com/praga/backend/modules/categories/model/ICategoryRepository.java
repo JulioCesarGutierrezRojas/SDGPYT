@@ -13,4 +13,7 @@ public interface ICategoryRepository extends JpaRepository<Category, Long> {
     
     @Query("SELECT DISTINCT c FROM Category c INNER JOIN Task t ON t.category = c WHERE t.project.projectId = :projectId")
     List<Category> findCategoriesByProject(@Param("projectId") Long projectId);
+    
+    @Query("SELECT c FROM Category c WHERE c.name = :name AND c.categoryId != :categoryId")
+    Category findByNameAndCategoryIdNot(@Param("name") String name, @Param("categoryId") Long categoryId);
 }

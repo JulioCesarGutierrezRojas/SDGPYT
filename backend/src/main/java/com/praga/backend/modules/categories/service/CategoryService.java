@@ -4,7 +4,9 @@ import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
 import com.praga.backend.modules.categories.controller.dto.GetCategoriesDto;
 import com.praga.backend.modules.categories.controller.dto.GetCategoriesByProjectDto;
+import com.praga.backend.modules.categories.controller.dto.UpdateCategoryDto;
 import com.praga.backend.modules.categories.model.ICategoryRepository;
+import com.praga.backend.modules.categories.model.Category;
 import com.praga.backend.modules.projects.model.IProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,7 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,6 +67,47 @@ public class CategoryService {
         
         return new ResponseEntity<>(
                 new ApiResponse<>(categoriesInProject, TypesResponse.SUCCESS, "Categorías del proyecto obtenidas correctamente"), 
+                HttpStatus.OK
+        );
+    }
+    
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> updateCategory(UpdateCategoryDto dto) {
+        // Buscar la categoría por ID
+        Category category = categoryRepository.findById(dto.getCategoryId()).orElse(null);
+        
+        if (Objects.isNull(category)) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "No se encontró la categoría con ID: " + dto.getCategoryId()),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+        
+        // Validaciones adicionales
+        if (Objects.isNull(dto.getName()) || dto.getName().trim().isEmpty()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "El nombre de la categoría es obligatorio."),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        
+        // Verificar si ya existe otra categoría con el mismo nombre (excluyendo la actual)
+        Category existingCategory = categoryRepository.findByNameAndCategoryIdNot(dto.getName(), dto.getCategoryId());
+        if (!Objects.isNull(existingCategory)) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "Ya existe una categoría con ese nombre."),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        
+        // Actualizar los campos
+        category.setName(dto.getName().trim());
+        category.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
+        
+        categoryRepository.save(category);
+        
+        return new ResponseEntity<>(
+                new ApiResponse<>(null, TypesResponse.SUCCESS, "Categoría actualizada correctamente."),
                 HttpStatus.OK
         );
     }
