@@ -2,14 +2,21 @@ package com.praga.backend.modules.projects.service;
 
 import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
+import com.praga.backend.modules.projects.controller.dto.GetAssignedProjectsDto;
 import com.praga.backend.modules.projects.controller.dto.GetProjectsDto;
 import com.praga.backend.modules.projects.controller.dto.SaveProjectDto;
 import com.praga.backend.modules.projects.controller.dto.UpdateProjectDto;
 import com.praga.backend.modules.projects.model.IProjectRepository;
 import com.praga.backend.modules.projects.model.Project;
+import com.praga.backend.modules.projects.model.ProjectUser;
+import com.praga.backend.modules.users.model.IUserRepository;
+import com.praga.backend.modules.users.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +31,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectService {
     private final IProjectRepository projectRepository;
+    private final IUserRepository userRepository;
 
     @Transactional(readOnly = true)
     public ResponseEntity<Object> getAllProjects() {
@@ -91,7 +99,7 @@ public class ProjectService {
         project.setName(dto.getName());
         project.setAbbreviation(dto.getAbbreviation());
         project.setDescription(dto.getDescription());
-        project.setStatus(dto.getStatus() != null ? dto.getStatus() : project.getStatus());
+        //project.setStatus(dto.getStatus() != null ? dto.getStatus() : project.getStatus());
 
         projectRepository.save(project);
 
@@ -99,6 +107,51 @@ public class ProjectService {
                 new ApiResponse<>(null, TypesResponse.SUCCESS, "Proyecto actualizado correctamente."),
                 HttpStatus.OK
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<Object> getAssignedProjects() {
+        try {
+            // Obtener el usuario actual del contexto de seguridad
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no autenticado"),
+                        HttpStatus.UNAUTHORIZED
+                );
+            }
+
+            String username = authentication.getName();
+            if (username == null || username.equals("anonymousUser")) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no autenticado"),
+                        HttpStatus.UNAUTHORIZED
+                );
+            }
+
+            User currentUser = userRepository.findByEmail(username).orElse(null);
+
+            if (Objects.isNull(currentUser)) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Usuario no encontrado: " + username),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            // Por ahora retornamos información básica del usuario para debug
+            return new ResponseEntity<>(
+                    new ApiResponse<>(List.of(), TypesResponse.SUCCESS, "Usuario encontrado: " + currentUser.getName() + " " + currentUser.getLastname()),
+                    HttpStatus.OK
+            );
+            
+        } catch (Exception e) {
+            e.printStackTrace(); // Para debug
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Error al obtener proyectos asignados: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
 }

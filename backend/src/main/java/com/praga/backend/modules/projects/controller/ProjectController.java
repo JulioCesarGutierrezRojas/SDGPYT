@@ -34,4 +34,10 @@ public class ProjectController {
         return projectService.updateProject(dto);
     }
 
+    @GetMapping("/assigned")
+    @Operation(summary = "Obtener proyectos asignados", description = "Lista todos los proyectos asignados al usuario autenticado con su rol correspondiente")
+    public ResponseEntity<Object> getAssignedProjects() {
+        return projectService.getAssignedProjects();
+    }
+
 }
