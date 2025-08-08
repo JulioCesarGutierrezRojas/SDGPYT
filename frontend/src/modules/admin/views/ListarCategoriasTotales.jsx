@@ -1,24 +1,20 @@
 import { useState, useEffect } from "react";
-import {
-  PencilLine,
-  Trash,
-  PlusCircle,
-  User2,
-  FolderKanban,
-} from "lucide-react";
+import { PencilLine, Trash, PlusCircle, User2, FolderKanban, } from "lucide-react";
 import ModalCrearCategoria from "../../../components/ModalCrearCategoria";
 import ModalCrearTarea from "../../../components/ModalCrearTarea";
 import ModalDetalleTarea from "../../../components/ModalDetalleTarea";
+import { useParams } from "react-router-dom";
 
 const ListarCategoriasTotales = () => {
+  const { proyectoId } = useParams();
   const nombreProyecto = "IMG";
 
   const [categorias, setCategorias] = useState([
-    { id: "backlog", nombre: "Backlog", descripcion: "Tareas iniciales", estatus: "activo" },
-    { id: "definition", nombre: "Definition", descripcion: "Definir requerimientos", estatus: "activo" },
-    { id: "inProgress", nombre: "In Progress", descripcion: "Tareas en desarrollo", estatus: "activo" },
-    { id: "inReview", nombre: "In Review", descripcion: "Revisión y feedback", estatus: "activo" },
-    { id: "done", nombre: "Done", descripcion: "Tareas completadas", estatus: "inactivo" },
+    { id: "backlog", nombre: "Backlog", descripcion: "Tareas iniciales", estatus: "Habilitado" },
+    { id: "definition", nombre: "Definition", descripcion: "Definir requerimientos", estatus: "Habilitado" },
+    { id: "inProgress", nombre: "In Progress", descripcion: "Tareas en desarrollo", estatus: "Deshabilitado" },
+    { id: "inReview", nombre: "In Review", descripcion: "Revisión y feedback", estatus: "Habilitado" },
+    { id: "done", nombre: "Done", descripcion: "Tareas completadas", estatus: "Deshabilitado" },
   ]);
 
   const [tareas, setTareas] = useState([
@@ -85,34 +81,34 @@ const ListarCategoriasTotales = () => {
 
   // Agregar tarea
   const handleAgregarTarea = (nuevaTarea) => {
-  const responsable = usuarios.find(u => u.id === nuevaTarea.usuario)?.nombre || "Pendiente";
+    const responsable = usuarios.find(u => u.id === nuevaTarea.usuario)?.nombre || "Pendiente";
 
-  if (!nuevaTarea.nombre || nuevaTarea.nombre.trim() === "") {
-    alert("La tarea debe tener un nombre.");
-    return;
-  }
+    if (!nuevaTarea.nombre || nuevaTarea.nombre.trim() === "") {
+      alert("La tarea debe tener un nombre.");
+      return;
+    }
 
-  const tareaFormateada = {
-    ...nuevaTarea,
-    id: Date.now(),
-    categoria: categoriaParaNuevaTarea,
-    responsable,
-    titulo: nuevaTarea.nombre,  // Aquí convierto nombre en titulo para mostrar
+    const tareaFormateada = {
+      ...nuevaTarea,
+      id: Date.now(),
+      categoria: categoriaParaNuevaTarea,
+      responsable,
+      titulo: nuevaTarea.nombre,  // Aquí convierto nombre en titulo para mostrar
+    };
+
+    setTareas((prev) => [...prev, tareaFormateada]);
+
+    setMostrarModalTarea(false);
+    setCategoriaParaNuevaTarea(null);
   };
-
-  setTareas((prev) => [...prev, tareaFormateada]);
-
-  setMostrarModalTarea(false);
-  setCategoriaParaNuevaTarea(null);
-};
 
 
   const abrirModalDetalleTarea = (tarea) => {
-  setTareaSeleccionada({
-    ...tarea,
-    nombre: tarea.titulo, // ← Añade esto para que el input se llene con el valor correcto
-  });
-};
+    setTareaSeleccionada({
+      ...tarea,
+      nombre: tarea.titulo, 
+    });
+  };
 
   const cerrarModalDetalleTarea = () => {
     setTareaSeleccionada(null);
@@ -125,36 +121,35 @@ const ListarCategoriasTotales = () => {
     }
   };
 
-    // Guardar cambios en tarea  
-    const handleGuardarCambiosTarea = (tareaActualizada) => {
-  setTareas((prevTareas) =>
-    prevTareas.map((t) =>
-      t.id === tareaActualizada.id ? tareaActualizada : t
-    )
-  );
+  // Guardar cambios en tarea  
+  const handleGuardarCambiosTarea = (tareaActualizada) => {
+    setTareas((prevTareas) =>
+      prevTareas.map((t) =>
+        t.id === tareaActualizada.id ? tareaActualizada : t
+      )
+    );
 
-  cerrarModalDetalleTarea();
-};
+    cerrarModalDetalleTarea();
+  };
 
   return (
-    <div className="p-6 relative">
-      <h2 className="text-2xl font-bold text-[var(--color-azul-950)] mb-2">
-        {`Categorías de proyecto: ${nombreProyecto}`}
-      </h2>
-      <p className="text-sm text-gray-600 mb-6">
+    <div className="p-3 relative">
+      <h2 className="text-2xl font-bold text-[var(--color-azul-900)] mb-2">Categorías de proyecto: {proyectoId}</h2>
+      <p className="text-gray-600 mb-6">
         Visualiza las fases y tareas de tu proyecto
       </p>
 
       <div
-        className={`overflow-x-auto transition-all duration-200 ${
-          (mostrarModalCategoria || mostrarModalTarea || tareaSeleccionada) ? "blur-md" : ""
+        className={
+          `overflow-x-auto scroll-cyan transition-all duration-200 
+          ${(mostrarModalCategoria || mostrarModalTarea || tareaSeleccionada) ? "blur-md" : ""
         }`}
       >
         <div className="flex gap-6 w-max pb-4">
           {categorias.map((categoria) => (
             <div
               key={categoria.id}
-              className="min-w-[260px] max-w-xs bg-[var(--color-azul-100)] border border-[var(--color-azul-300)] rounded-xl shadow-sm p-4 flex flex-col"
+              className="min-w-[280px] max-w-xs h-[300px] bg-[var(--color-azul-100)] border border-[var(--color-azul-300)] rounded-xl shadow-sm p-4 flex flex-col"
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
@@ -163,7 +158,7 @@ const ListarCategoriasTotales = () => {
                   </h3>
                   <p className="text-sm text-gray-600">{categoria.descripcion}</p>
                   <p className="text-xs font-semibold mt-1">
-                    Estatus: <span className={`${categoria.estatus === "activo" ? "text-green-600" : "text-red-600"}`}>{categoria.estatus}</span>
+                    Estatus: <span className={`${categoria.estatus === "Habilitado" ? "text-green-600" : "text-red-600"}`}>{categoria.estatus}</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -206,11 +201,11 @@ const ListarCategoriasTotales = () => {
                         </div>
                         <div className="flex items-center text-xs text-gray-600 mb-1">
                           <FolderKanban className="w-3 h-3 mr-1 text-[var(--color-azul-950)]" />
-                          <span>proyecto: {nombreProyecto}</span>
+                          <span>Proyecto: {nombreProyecto}</span>
                         </div>
                         <div className="flex items-center text-xs text-gray-600">
                           <User2 className="w-3 h-3 mr-1 text-[var(--color-azul-950)]" />
-                          <span>responsable: {tarea.responsable}</span>
+                          <span>Responsable: {tarea.responsable}</span>
                         </div>
                       </div>
                     </div>

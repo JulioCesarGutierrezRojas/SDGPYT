@@ -28,14 +28,14 @@ const EditUserModal = ({ user, onClose, onSave }) => {
     <>
       {/* Fondo del modal */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-40"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
         onClick={onClose}
       />
 
       {/* Contenido del modal */}
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <div
-          className="bg-white rounded-xl shadow-lg border border-cyan-400 p-6 w-full max-w-xl relative"
+          className="bg-white rounded-xl shadow-lg border border-cyan-200 p-6 w-full max-w-xl relative"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

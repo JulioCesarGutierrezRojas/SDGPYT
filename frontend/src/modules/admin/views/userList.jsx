@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Pencil, Trash2, Download, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { useNavigate } from "react-router"
 import { showConfirmation } from "../../../kernel/alerts"
-import EditUserModal from "./editUser"
+import EditUserModal from "../../admin/components/editUser"
 
 const UserList = () => {
     const navigate = useNavigate();
@@ -12,20 +12,39 @@ const UserList = () => {
     const usersPerPage = 7
 
     const users = [
-        { id: 1, name: "Clara Bennett", email: "clara.bennett@example.com", status: "Active" },
-        { id: 2, name: "Laura Smith", email: "laura.smith@example.com", status: "Inactive" },
-        { id: 3, name: "Mike Brown", email: "mike.brown@example.com", status: "Active" },
-        { id: 4, name: "Jane Doe", email: "jane.doe@example.com", status: "Active" },
-        { id: 5, name: "John Appleseed", email: "john.apple@example.com", status: "Inactive" },
-        { id: 6, name: "Leo Messi", email: "leo.messi@example.com", status: "Active" },
-        { id: 7, name: "Cristina Hall", email: "cristina.hall@example.com", status: "Active" },
-        { id: 8, name: "Tom Cruise", email: "tom.cruise@example.com", status: "Inactive" },
+        {
+            id: 1,
+            nombre: "Clara",
+            apellidos: "Bennett",
+            correo: "clara@example.com",
+            telefono: "555-123-4567",
+            rol: "Administrador",
+            estado: "Habilitado"
+        },
+        {
+            id: 2,
+            nombre: "Laura",
+            apellidos: "Smith",
+            correo: "laurah@example.com",
+            telefono: "555-987-6543",
+            rol: "Usuario",
+            estado: "Deshabilitado"
+        },
+        {
+            id: 3,
+            nombre: "Mike",
+            apellidos: "Brown",
+            correo: "mike@example.com",
+            telefono: "555-456-7890",
+            rol: "Usuario",
+            estado: "Habilitado"
+        },
     ]
 
     const filteredUsers = users.filter(
         (user) =>
-            user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase())
+            `${user.nombre} ${user.apellidos}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.correo.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
     const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
@@ -53,11 +72,11 @@ const UserList = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto p-3">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Gestión de Usuarios</h1>
                 <p className="text-gray-600">
-                    Gestionar todos los usuarios en la aplicación, visualiza, añade, edita o eliminar un usuario
+                    Gestionar todos los usuarios en la aplicación (visualiza, añade, edita o elimina un usuario)
                 </p>
             </div>
 
@@ -84,49 +103,56 @@ const UserList = () => {
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nombre</th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Correo</th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Correo electrónico</th>
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Teléfono</th>
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Rol</th>
+                            <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Estado</th>
                             <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {paginatedUsers.map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.name}</td>
+                                <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.nombre} {user.apellidos}</td>
                                 <td className="px-6 py-4 text-sm text-blue-600 hover:text-blue-800">
-                                    <a href={`mailto:${user.email}`}>{user.email}</a>
+                                    <a href={`mailto:${user.correo}`}>{user.correo}</a>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-200 text-gray-700 rounded-full">
-                                        {user.status}
+                                <td className="px-6 py-4 text-sm text-gray-900">{user.telefono}</td>
+                                <td className="px-6 py-4 text-sm text-gray-900">{user.rol}</td>
+                                <td className="px-6 py-4 text-center">
+                                    <span
+                                        className={`justify-center items-center inline-flex w-24 px-3 py-1 text-xs font-medium rounded-full ${user.estado === "Habilitado"
+                                                ? "bg-green-200 text-green-800"
+                                                : "bg-gray-300 text-gray-700"
+                                            }`}
+                                    >
+                                        {user.estado}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-center">
                                     <div className="flex items-center justify-center gap-2">
                                         <button
                                             onClick={() => handleEditClick(user)}
-                                            className="bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors">
+                                            className="bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black w-7 h-7 flex items-center justify-center rounded transition-colors">
                                             <Pencil size={16} />
                                         </button>
                                         <button
-
                                             onClick={() => {
-                                                const newStatus = user.status === "Active" ? "Inactive" : "Active";
+                                                const nuevoEstado = user.estado === "Habilitado" ? "Deshabilitado" : "Habilitado";
                                                 setSelectedUser(user);
                                                 showConfirmation(
-                                                    "Cambiar estatus",
-                                                    `¿Deseas cambiar el estatus de ${user.name} a ${newStatus}?`,
+                                                    "Cambiar estado",
+                                                    `¿Deseas cambiar el estado de ${user.nombre} a ${nuevoEstado}?`,
                                                     "question",
                                                     () => {
-                                                        console.log(`Estatus de ${user.name} cambiado a ${newStatus}`);
+                                                        console.log(`Estado de ${user.nombre} cambiado a ${nuevoEstado}`);
                                                     },
                                                     () => {
                                                         console.log("Cambio cancelado");
                                                     }
                                                 );
                                             }}
-
-                                            className="bg-[var(--color-azul-400)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors">
+                                            className="bg-[var(--color-azul-400)] hover:bg-cyan-300 text-black w-7 h-7 flex items-center justify-center rounded transition-colors">
                                             <Download size={16} />
                                         </button>
                                         <button
@@ -134,7 +160,7 @@ const UserList = () => {
                                                 setSelectedUser(user);
                                                 showConfirmation(
                                                     "¿Eliminar usuario?",
-                                                    `¿Estás segura/o de que deseas eliminar a ${user.name}?`, "warning",
+                                                    `¿Estás segura/o de que deseas eliminar a ${user.nombre}?`, "warning",
                                                     () => {
                                                         console.log("Usuario eliminado:", user);
                                                     },
@@ -143,7 +169,7 @@ const UserList = () => {
                                                     }
                                                 );
                                             }}
-                                            className="bg-[var(--color-azul-200)] hover:bg-cyan-300 text-black w-8 h-8 flex items-center justify-center rounded transition-colors">
+                                            className="bg-[var(--color-azul-200)] hover:bg-cyan-300 text-black w-7 h-7 flex items-center justify-center rounded transition-colors">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -167,8 +193,8 @@ const UserList = () => {
                         key={i}
                         onClick={() => changePage(i + 1)}
                         className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${currentPage === i + 1
-                            ? "bg-[var(--color-azul-600)] text-white"
-                            : "border border-gray-300 hover:bg-gray-100"
+                                ? "bg-[var(--color-azul-600)] text-white"
+                                : "border border-gray-300 hover:bg-gray-100"
                             }`}
                     >
                         {i + 1}
@@ -181,7 +207,7 @@ const UserList = () => {
                     <ChevronRight />
                 </button>
             </div>
-            
+
             {showEditModal && (
                 <EditUserModal
                     user={selectedUser}

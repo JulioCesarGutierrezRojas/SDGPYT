@@ -1,8 +1,10 @@
 import { useState } from "react"
 import { Eye, EyeOff, Plus } from "lucide-react"
+import { useNavigate } from "react-router-dom";
 
 const UserRegister = () => {
     const [showPassword, setShowPassword] = useState(false)
+    const navigate = useNavigate();
 
     return (
         <div className="flex-1">
@@ -15,6 +17,21 @@ const UserRegister = () => {
 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <form className="space-y-6">
+                        {/* Nombre */}
+                        <div>
+                            <label htmlFor="nombre" className="block text-sm font-semibold text-gray-700 mb-2">
+                                Nombre *
+                            </label>
+                            <input
+                                type="text"
+                                id="nombre"
+                                name="nombre"
+                                placeholder="Ej. Mario Alonso"
+                                className="text-sm w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                            />
+                            <p className="mt-1 text-sm text-gray-500">Ingrese su nombre</p>
+                        </div>
+
                         {/* Apellidos */}
                         <div>
                             <label htmlFor="apellidos" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -45,21 +62,6 @@ const UserRegister = () => {
                             <p className="mt-1 text-sm text-gray-500">
                                 Ingrese su correo electrónico
                             </p>
-                        </div>
-
-                        {/* Nombre */}
-                        <div>
-                            <label htmlFor="nombre" className="block text-sm font-semibold text-gray-700 mb-2">
-                                Nombre *
-                            </label>
-                            <input
-                                type="text"
-                                id="nombre"
-                                name="nombre"
-                                placeholder="Ej. Mario Alonso"
-                                className="text-sm w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-                            />
-                            <p className="mt-1 text-sm text-gray-500">Ingrese su nombre</p>
                         </div>
 
                         {/* Teléfono */}
@@ -104,9 +106,18 @@ const UserRegister = () => {
                         </div>
 
                         {/* Botón de envío */}
-                        <div className="flex justify-end">
-                            <button type="submit"
-                                className="flex items-center gap-2 px-6 py-3 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+                        <div className="flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => navigate("/admin/usuarios")}
+                                className="flex items-center gap-2 px-6 py-3 bg-gray-300 hover:bg-gray-400 text-black font-semibold rounded-lg transition-colors "
+                            >
+                                Regresar
+                            </button>
+
+                            <button
+                                type="submit"
+                                className="flex items-center gap-2 px-6 py-3 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black font-semibold rounded-lg transition-colors "
                             >
                                 <Plus size={18} />
                                 Registrar Usuario
