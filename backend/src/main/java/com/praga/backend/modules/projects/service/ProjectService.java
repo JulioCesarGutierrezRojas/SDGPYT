@@ -120,7 +120,7 @@ public class ProjectService {
 
         project.setName(dto.getName());
         project.setAbbreviation(dto.getAbbreviation());
-        project.setDescription(dto.getDescription();
+        project.setDescription(dto.getDescription());
         //project.setStatus(dto.getStatus() != null ? dto.getStatus() : project.getStatus());
 
         projectRepository.save(project);
