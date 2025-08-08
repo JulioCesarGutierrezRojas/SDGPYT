@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import ModalCrearProyecto from "../../components/ModalCrearProyecto";
 
 const proyectosDummy = [
   {
@@ -20,11 +19,10 @@ const proyectosDummy = [
   },
 ];
 
-export default function ProjectsAdmin() {
+export default function ProjectsUser() {
   const [proyectos, setProyectos] = useState(proyectosDummy);
   const [busqueda, setBusqueda] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
-  const [modalAbierto, setModalAbierto] = useState(false);
   const proyectosPorPagina = 5;
 
   const proyectosFiltrados = proyectos.filter((proyecto) =>
@@ -43,20 +41,13 @@ export default function ProjectsAdmin() {
     }
   };
 
-  const handleGuardarProyecto = (nuevoProyecto) => {
-    setProyectos((prev) => [
-      ...prev,
-      { ...nuevoProyecto, id: Date.now() }, // Asignamos un ID único
-    ]);
-    setModalAbierto(false);
-  };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto p-3">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Gestión de Proyectos</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Mis Proyectos</h1>
         <p className="text-gray-600">
-          Visualiza, busca y administra los proyectos registrados en la plataforma.
+          Visualiza busca y visita tus proyectos registrados en la plataforma.
         </p>
       </div>
 
@@ -74,14 +65,6 @@ export default function ProjectsAdmin() {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
           />
         </div>
-
-        <button
-          onClick={() => setModalAbierto(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black rounded-md transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Crear
-        </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -97,15 +80,15 @@ export default function ProjectsAdmin() {
           <tbody className="bg-white divide-y divide-gray-200">
             {proyectosPaginados.map((proyecto) => (
               <tr key={proyecto.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm font-medium text-blue-600 hover:text-blue-800 underline">
-                  <Link to={`/admin/proyectos/${proyecto.id}`}>
+                <td className="px-6 py-4 text-sm font-medium text-[var(--color-azul-900)] hover:underline">
+                  <Link to={`/user/misCategorias/${proyecto.id}`}>
                     {proyecto.nombre}
                   </Link>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">{proyecto.abreviacion}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{proyecto.descripcion}</td>
                 <td className="px-6 py-4">
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full
+                  <span className={`justify-center items-center inline-flex w-24 px-3 py-1 text-xs font-medium rounded-full
                     ${proyecto.estatus === "Habilitado"
                       ? "bg-green-100 text-green-800"
                       : "bg-red-100 text-red-800"}`}>
@@ -150,14 +133,6 @@ export default function ProjectsAdmin() {
           <ChevronRight />
         </button>
       </div>
-
-      {/* Modal Crear Proyecto */}
-      {modalAbierto && (
-        <ModalCrearProyecto
-          onClose={() => setModalAbierto(false)}
-          onGuardar={handleGuardarProyecto}
-        />
-      )}
     </div>
   );
 }
