@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { PencilLine, Trash, PlusCircle, User2, FolderKanban, } from "lucide-react";
+import { FaEllipsisV } from "react-icons/fa";
 import ModalCrearCategoria from "../../../components/ModalCrearCategoria";
 import ModalCrearTarea from "../../../components/ModalCrearTarea";
 import ModalDetalleTarea from "../../../components/ModalDetalleTarea";
@@ -196,7 +197,7 @@ const ListarCategoriasTotales = () => {
                             className="text-gray-500 hover:text-gray-800"
                             title="Ver detalles"
                           >
-                            &#x22EE;
+                           <FaEllipsisV />
                           </button>
                         </div>
                         <div className="flex items-center text-xs text-gray-600 mb-1">

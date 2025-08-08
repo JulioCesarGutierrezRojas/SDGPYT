@@ -46,11 +46,11 @@ export default function UserLayout() {
                         <h3 className="text-gray-700 font-medium mb-3">Menú</h3>
                         <hr className="border-t border-[var(--color-gris-700)] mb-4" />
                         <nav className="space-y-2">
-                            <NavLink to="/" className={({ isActive }) => `${linkBaseClasses} ${isActive ? linkActive : linkInactive}`}>
-                                <FolderKanban className="w-4 h-4" />Proyectos
+                            <NavLink to="/user/misProyectos" className={({ isActive }) => `${linkBaseClasses} ${isActive ? linkActive : linkInactive}`}>
+                                <FolderKanban className="w-4 h-4" />Mis proyectos
                             </NavLink>
 
-                            <NavLink to="/" className={({ isActive }) => `${linkBaseClasses} ${isActive ? linkActive : linkInactive}`}>
+                            <NavLink to="/user/perfil" className={({ isActive }) => `${linkBaseClasses} ${isActive ? linkActive : linkInactive}`}>
                                 <Settings className="w-4 h-4" />Perfil
                             </NavLink>
                         </nav>
