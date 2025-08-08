@@ -43,7 +43,7 @@ export default function ModalCrearProyecto({ onClose, onGuardar }) {
               name="nombre"
               value={nuevoProyecto.nombre}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
 
@@ -54,7 +54,7 @@ export default function ModalCrearProyecto({ onClose, onGuardar }) {
               name="abreviacion"
               value={nuevoProyecto.abreviacion}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
 
@@ -65,7 +65,7 @@ export default function ModalCrearProyecto({ onClose, onGuardar }) {
               value={nuevoProyecto.descripcion}
               onChange={handleChange}
               rows={3}
-              className="w-full border border-gray-300 rounded px-3 py-2 resize-none"
+              className="w-full border border-gray-300 rounded px-3 py-2 resize-none focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
 
@@ -75,7 +75,7 @@ export default function ModalCrearProyecto({ onClose, onGuardar }) {
               name="estatus"
               value={nuevoProyecto.estatus}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="Habilitado">Habilitado</option>
               <option value="Deshabilitado">Deshabilitado</option>

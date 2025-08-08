@@ -51,7 +51,7 @@ const ModalDetalleTarea = ({ tarea, onClose, onEliminar, onGuardar }) => {
               name="descripcion"
               value={tareaEditable.descripcion}
               onChange={handleChange}
-              className="w-full mt-1 p-1 border border-gray-300 rounded resize-none"
+              className="w-full mt-1 p-1 border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
               rows={3}
             />
           </div>
@@ -61,7 +61,7 @@ const ModalDetalleTarea = ({ tarea, onClose, onEliminar, onGuardar }) => {
               name="responsable"
               value={tareaEditable.responsable}
               onChange={handleChange}
-              className="w-full mt-1 p-1 border border-gray-300 rounded"
+              className="w-full mt-1 p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             />
           </div>
           <div>
@@ -70,7 +70,7 @@ const ModalDetalleTarea = ({ tarea, onClose, onEliminar, onGuardar }) => {
               name="proyecto"
               value={tareaEditable.proyecto}
               onChange={handleChange}
-              className="w-full mt-1 p-1 border border-gray-300 rounded"
+              className="w-full mt-1 p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             />
           </div>
           <div>
@@ -79,7 +79,7 @@ const ModalDetalleTarea = ({ tarea, onClose, onEliminar, onGuardar }) => {
               name="categoria"
               value={tareaEditable.categoria}
               onChange={handleChange}
-              className="w-full mt-1 p-1 border border-gray-300 rounded"
+              className="w-full mt-1 p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             />
           </div>
           <div>
@@ -88,7 +88,7 @@ const ModalDetalleTarea = ({ tarea, onClose, onEliminar, onGuardar }) => {
               name="usuario"
               value={tareaEditable.usuario}
               onChange={handleChange}
-              className="w-full mt-1 p-1 border border-gray-300 rounded"
+              className="w-full mt-1 p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             />
           </div>
           <div>
@@ -97,7 +97,7 @@ const ModalDetalleTarea = ({ tarea, onClose, onEliminar, onGuardar }) => {
               name="estatus"
               value={tareaEditable.estatus}
               onChange={handleChange}
-              className="w-full mt-1 p-1 border border-gray-300 rounded"
+              className="w-full mt-1 p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             >
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>

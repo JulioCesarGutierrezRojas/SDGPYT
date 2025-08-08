@@ -70,7 +70,7 @@ const ModalCrearCategoria = ({ visible, onClose, onGuardar, categoriaEditar }) =
               value={form.nombre}
               onChange={handleChange}
               required
-              className="w-full border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
+              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             />
           </div>
 
@@ -84,7 +84,7 @@ const ModalCrearCategoria = ({ visible, onClose, onGuardar, categoriaEditar }) =
               onChange={handleChange}
               required
               rows={3}
-              className="w-full border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
+              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             />
           </div>
 
@@ -96,7 +96,7 @@ const ModalCrearCategoria = ({ visible, onClose, onGuardar, categoriaEditar }) =
               name="estatus"
               value={form.estatus}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 mt-1"
+              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             >
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
@@ -105,7 +105,7 @@ const ModalCrearCategoria = ({ visible, onClose, onGuardar, categoriaEditar }) =
 
           <button
             type="submit"
-            className="w-full bg-[var(--color-azul-600)] text-white py-2 rounded hover:bg-[var(--color-azul-700)] transition-colors"
+            className="w-full bg-[var(--color-azul-600)] text-white py-2 rounded hover:bg-[var(--color-azul-800)] transition-colors"
           >
             Guardar categoría
           </button>
