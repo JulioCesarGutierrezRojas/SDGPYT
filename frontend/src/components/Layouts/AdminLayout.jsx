@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { UserRound, FolderKanban, Settings, LogOut, Menu } from "lucide-react";
+import { UserRound, FolderKanban, Settings, LogOut, Menu, DatabaseBackup } from "lucide-react";
 import { useState } from "react";
 
 export default function AdminLayout() {
@@ -54,6 +54,10 @@ export default function AdminLayout() {
 
                             <NavLink to="/admin/perfil" className={({ isActive }) => `${linkBaseClasses} ${isActive ? linkActive : linkInactive}`}>
                                 <Settings className="w-4 h-4" />Perfil
+                            </NavLink>
+
+                            <NavLink to="/admin/nada" className={({ isActive }) => `${linkBaseClasses} ${isActive ? linkActive : linkInactive}`}>
+                                <DatabaseBackup className="w-4 h-4" />Historial de acciones
                             </NavLink>
                         </nav>
                     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User2, FolderKanban} from "lucide-react";
+import { User2, FolderKanban, ExternalLink} from "lucide-react";
 import { FaExpand } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 
@@ -68,7 +68,7 @@ const ListarCategoriasUsuario = () => {
                           className="text-gray-500 hover:text-gray-800"
                           title="Ver detalles"
                         >
-                          <FaExpand />
+                          <ExternalLink className="w-4 h-4"/>
                         </button>
                       </div>
                       <div className="flex items-center text-xs text-gray-600 mb-1">
