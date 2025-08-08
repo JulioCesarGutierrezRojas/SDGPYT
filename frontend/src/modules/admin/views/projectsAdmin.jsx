@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, ChevronLeft, ChevronRight, Pencil, Trash2, Download } from "lucide-react";
 import ModalCrearProyecto from "../../../components/ModalCrearProyecto";
+import ModalEditarProyecto from "../components/ModalEditarProyecto";
 
 const proyectosDummy = [
   {
@@ -25,6 +26,8 @@ export default function ProjectsAdmin() {
   const [busqueda, setBusqueda] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
+  const [mostrarModal, setMostrarModal] = useState(false);
   const proyectosPorPagina = 5;
 
   const proyectosFiltrados = proyectos.filter((proyecto) =>
@@ -46,9 +49,35 @@ export default function ProjectsAdmin() {
   const handleGuardarProyecto = (nuevoProyecto) => {
     setProyectos((prev) => [
       ...prev,
-      { ...nuevoProyecto, id: Date.now() }, 
+      { ...nuevoProyecto, id: Date.now() },
     ]);
     setModalAbierto(false);
+  };
+
+  const handleEditar = (proyecto) => {
+    setProyectoSeleccionado(proyecto);
+    setMostrarModal(true);
+  };
+
+  const guardarCambios = (proyectoEditado) => {
+    console.log("Guardado en backend:", proyectoEditado);
+    // Aquí iría tu lógica con Axios o fetch para actualizar en la BD
+  };
+
+  const handleEliminar = (id) => {
+    if (window.confirm("¿Seguro que deseas eliminar este proyecto?")) {
+      setProyectos((prev) => prev.filter((p) => p.id !== id));
+    }
+  };
+
+  const handleCambiarEstatus = (id) => {
+    setProyectos((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? { ...p, estatus: p.estatus === "Habilitado" ? "Deshabilitado" : "Habilitado" }
+          : p
+      )
+    );
   };
 
   return (
@@ -92,6 +121,7 @@ export default function ProjectsAdmin() {
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Abreviación</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Descripción</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Estatus</th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -111,6 +141,30 @@ export default function ProjectsAdmin() {
                       : "bg-red-100 text-red-800"}`}>
                     {proyecto.estatus}
                   </span>
+                </td>
+                <td className="px-6 py-4 flex justify-center gap-2">
+                  <button
+                    onClick={() =>
+                      handleEditar({
+                        nombre: "Proyecto X",
+                        abreviacion: "PX",
+                        descripcion: "Descripción ejemplo",
+                        estatus: "Habilitado",
+                      })
+                    }
+                    className="bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black w-7 h-7 flex items-center justify-center rounded transition-colors">
+                    <Pencil size={16} />
+                  </button>
+
+                  <button onClick={() => handleCambiarEstatus(proyecto.id)}
+                    className="bg-[var(--color-azul-400)] hover:bg-cyan-300 text-black w-7 h-7 flex items-center justify-center rounded transition-colors">
+                    <Download size={16} />
+                  </button>
+
+                  <button onClick={() => handleEliminar(proyecto.id)}
+                    className="bg-[var(--color-azul-200)] hover:bg-cyan-300 text-black w-7 h-7 flex items-center justify-center rounded transition-colors">
+                    <Trash2 size={16} />
+                  </button>
                 </td>
               </tr>
             ))}
@@ -156,6 +210,15 @@ export default function ProjectsAdmin() {
         <ModalCrearProyecto
           onClose={() => setModalAbierto(false)}
           onGuardar={handleGuardarProyecto}
+        />
+      )}
+
+      {/* Modal Editar Proyecto */}
+      {mostrarModal && (
+        <ModalEditarProyecto
+          proyecto={proyectoSeleccionado}
+          onClose={() => setMostrarModal(false)}
+          onGuardar={guardarCambios}
         />
       )}
     </div>

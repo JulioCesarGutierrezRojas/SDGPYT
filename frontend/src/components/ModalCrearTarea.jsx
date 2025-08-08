@@ -58,7 +58,7 @@ const ModalCrearTarea = ({ visible, onClose, onGuardar, proyectos, usuarios }) =
               value={form.nombre}
               onChange={handleChange}
               required
-              className="w-full border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
+              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
               autoFocus
             />
           </div>
@@ -70,7 +70,7 @@ const ModalCrearTarea = ({ visible, onClose, onGuardar, proyectos, usuarios }) =
               value={form.descripcion}
               onChange={handleChange}
               rows={3}
-              className="w-full border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
+              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             />
           </div>
 
@@ -80,7 +80,7 @@ const ModalCrearTarea = ({ visible, onClose, onGuardar, proyectos, usuarios }) =
               name="estatus"
               value={form.estatus}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 mt-1"
+              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             >
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
@@ -93,7 +93,7 @@ const ModalCrearTarea = ({ visible, onClose, onGuardar, proyectos, usuarios }) =
               name="proyecto"
               value={form.proyecto}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 mt-1"
+              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             >
               {proyectos.map((proyecto) => (
                 <option key={proyecto.id} value={proyecto.id}>
@@ -109,7 +109,7 @@ const ModalCrearTarea = ({ visible, onClose, onGuardar, proyectos, usuarios }) =
               name="usuario"
               value={form.usuario}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 mt-1"
+              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             >
               {usuarios.map((usuario) => (
                 <option key={usuario.id} value={usuario.id}>
