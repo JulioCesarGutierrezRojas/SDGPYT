@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,12 @@ public class ProjectController {
         return projectService.getAllProjects();
     }
 
+    @GetMapping("/projectbyadmin")
+    @Operation(summary = "Obtener todos los proyectos para admin", description = "Lista todos los proyectos del sistema admin")
+    public ResponseEntity<Object> getProjectsByAdmin() {
+        return projectService.getProjectsByAdminRole();
+    }
+
     @PostMapping("/create")
     @Operation(summary = "Crear proyectos", description = "Creación de proyectos")
     public ResponseEntity<Object> createProject(@RequestBody SaveProjectDto dto) {
@@ -33,11 +40,17 @@ public class ProjectController {
     public ResponseEntity<Object> updateProject(@RequestBody UpdateProjectDto dto) {
         return projectService.updateProject(dto);
     }
-
+  
     @GetMapping("/assigned")
     @Operation(summary = "Obtener proyectos asignados", description = "Lista todos los proyectos asignados al usuario autenticado con su rol correspondiente")
     public ResponseEntity<Object> getAssignedProjects() {
         return projectService.getAssignedProjects();
+    }
+  
+    @PatchMapping("/changestatus")
+    @Operation(summary = "status del proyecto", description = "Actualiza el proyecto")
+    public ResponseEntity<Object> changeProjectStatus(@Validated @RequestBody UpdateProjectDto dto) {
+        return projectService.changeProjectStatus(dto);
     }
 
 }
