@@ -2,6 +2,7 @@ package com.praga.backend.modules.categories.controller;
 
 import com.praga.backend.modules.categories.controller.dto.GetCategoriesByProjectDto;
 import com.praga.backend.modules.categories.controller.dto.UpdateCategoryDto;
+import com.praga.backend.modules.categories.controller.dto.SaveCategoryDto;
 import com.praga.backend.modules.categories.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,12 @@ public class CategoryController {
     @Operation(summary = "Obtener categorías por proyecto", description = "Lista todas las categorías utilizadas en las tareas de un proyecto específico")
     public ResponseEntity<Object> getCategoriesByProject(@Validated @RequestBody GetCategoriesByProjectDto dto) {
         return categoryService.getCategoriesByProject(dto);
+    }
+    
+    @PostMapping("/")
+    @Operation(summary = "Crear categoría", description = "Crea una nueva categoría en el sistema")
+    public ResponseEntity<Object> saveCategory(@Validated @RequestBody SaveCategoryDto dto) {
+        return categoryService.saveCategory(dto);
     }
     
     @PutMapping("/")

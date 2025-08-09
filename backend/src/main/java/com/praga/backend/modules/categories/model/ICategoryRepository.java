@@ -16,4 +16,6 @@ public interface ICategoryRepository extends JpaRepository<Category, Long> {
     
     @Query("SELECT c FROM Category c WHERE c.name = :name AND c.categoryId != :categoryId")
     Category findByNameAndCategoryIdNot(@Param("name") String name, @Param("categoryId") Long categoryId);
+    
+    Category findByName(String name);
 }
