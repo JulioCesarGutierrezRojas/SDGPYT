@@ -5,6 +5,7 @@ import com.praga.backend.kernel.TypesResponse;
 import com.praga.backend.modules.categories.controller.dto.GetCategoriesDto;
 import com.praga.backend.modules.categories.controller.dto.GetCategoriesByProjectDto;
 import com.praga.backend.modules.categories.controller.dto.UpdateCategoryDto;
+import com.praga.backend.modules.categories.controller.dto.SaveCategoryDto;
 import com.praga.backend.modules.categories.model.ICategoryRepository;
 import com.praga.backend.modules.categories.model.Category;
 import com.praga.backend.modules.projects.model.IProjectRepository;
@@ -108,6 +109,39 @@ public class CategoryService {
         
         return new ResponseEntity<>(
                 new ApiResponse<>(null, TypesResponse.SUCCESS, "Categoría actualizada correctamente."),
+                HttpStatus.OK
+        );
+    }
+    
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> saveCategory(SaveCategoryDto dto) {
+        // Validaciones de entrada
+        if (Objects.isNull(dto.getName()) || dto.getName().trim().isEmpty()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "El nombre de la categoría es obligatorio."),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        
+        // Verificar si ya existe una categoría con el mismo nombre
+        Category existingCategory = categoryRepository.findByName(dto.getName().trim());
+        if (!Objects.isNull(existingCategory)) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "Ya existe una categoría con ese nombre."),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        
+        // Crear nueva categoría
+        Category category = new Category();
+        category.setName(dto.getName().trim());
+        category.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
+        category.setStatus(dto.getStatus() != null ? dto.getStatus() : true);
+        
+        categoryRepository.save(category);
+        
+        return new ResponseEntity<>(
+                new ApiResponse<>(null, TypesResponse.SUCCESS, "Categoría creada correctamente."),
                 HttpStatus.OK
         );
     }
