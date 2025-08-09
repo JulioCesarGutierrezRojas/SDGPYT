@@ -6,6 +6,7 @@ import com.praga.backend.modules.categories.controller.dto.GetCategoriesDto;
 import com.praga.backend.modules.categories.controller.dto.GetCategoriesByProjectDto;
 import com.praga.backend.modules.categories.controller.dto.UpdateCategoryDto;
 import com.praga.backend.modules.categories.controller.dto.SaveCategoryDto;
+import com.praga.backend.modules.categories.controller.dto.ChangeStatusCategoryDto;
 import com.praga.backend.modules.categories.model.ICategoryRepository;
 import com.praga.backend.modules.categories.model.Category;
 import com.praga.backend.modules.projects.model.IProjectRepository;
@@ -142,6 +143,26 @@ public class CategoryService {
         
         return new ResponseEntity<>(
                 new ApiResponse<>(null, TypesResponse.SUCCESS, "Categoría creada correctamente."),
+                HttpStatus.OK
+        );
+    }
+    
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> changeCategoryStatus(ChangeStatusCategoryDto dto) {
+        Category category = categoryRepository.findById(dto.getCategoryId()).orElse(null);
+        
+        if (Objects.isNull(category)) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "No existe la categoría."), 
+                    HttpStatus.NOT_FOUND
+            );
+        }
+        
+        category.setStatus(!category.getStatus());
+        categoryRepository.save(category);
+        
+        return new ResponseEntity<>(
+                new ApiResponse<>(null, TypesResponse.SUCCESS, "Estado de la categoría actualizado correctamente"), 
                 HttpStatus.OK
         );
     }
