@@ -114,9 +114,7 @@ const UserList = () => {
                         {paginatedUsers.map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.nombre} {user.apellidos}</td>
-                                <td className="px-6 py-4 text-sm text-blue-600 hover:text-blue-800">
-                                    <a href={`mailto:${user.correo}`}>{user.correo}</a>
-                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-900">{user.correo}</td>
                                 <td className="px-6 py-4 text-sm text-gray-900">{user.telefono}</td>
                                 <td className="px-6 py-4 text-sm text-gray-900">{user.rol}</td>
                                 <td className="px-6 py-4 text-center">
