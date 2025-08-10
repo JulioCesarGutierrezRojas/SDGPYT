@@ -4,6 +4,7 @@ import { FaEllipsisV } from "react-icons/fa";
 import ModalCrearCategoria from "../../../components/ModalCrearCategoria";
 import ModalCrearTarea from "../../../components/ModalCrearTarea";
 import ModalDetalleTarea from "../../../components/ModalDetalleTarea";
+import ModalInvitarUsuarios from "../components/ModalInvitarUsuarios";
 import { useParams } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
@@ -32,6 +33,7 @@ const AdminCategories = () => {
   const [mostrarModalTarea, setMostrarModalTarea] = useState(false);
   const [categoriaParaNuevaTarea, setCategoriaParaNuevaTarea] = useState(null);
   const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
+  const [mostrarModalInvitar, setMostrarModalInvitar] = useState(false);
 
   const usuarios = [
     { id: "u1", nombre: "Aurora Núñez" },
@@ -157,6 +159,12 @@ const AdminCategories = () => {
           <h2 className="text-2xl font-bold text-[var(--color-azul-900)]">Categorías de proyecto: {proyectoId}</h2>
           <p className="text-gray-600">Visualiza las fases y tareas de tu proyecto</p>
         </div>
+        <button
+          onClick={() => setMostrarModalInvitar(true)}
+          className="bg-cyan-500 text-white px-4 py-2 rounded-md w-40 hover:bg-cyan-600 font-semibold"
+        >
+          Invitar usuarios
+        </button>
       </div>
 
       <div className={`${(mostrarModalCategoria || mostrarModalTarea || tareaSeleccionada) ? "blur-md" : ""}`}>
@@ -277,6 +285,12 @@ const AdminCategories = () => {
           onGuardar={handleGuardarCambiosTarea}
         />
       )}
+
+      <ModalInvitarUsuarios
+        visible={mostrarModalInvitar}
+        onClose={() => setMostrarModalInvitar(false)}
+        onInvitar={(correos) => console.log("Invitar a:", correos)}
+      />
     </div>
   );
 };

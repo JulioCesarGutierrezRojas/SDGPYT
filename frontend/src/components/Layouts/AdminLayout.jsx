@@ -56,7 +56,7 @@ export default function AdminLayout() {
                                 <Settings className="w-4 h-4" />Perfil
                             </NavLink>
 
-                            <NavLink to="/admin/nada" className={({ isActive }) => `${linkBaseClasses} ${isActive ? linkActive : linkInactive}`}>
+                            <NavLink to="/admin/bitacora" className={({ isActive }) => `${linkBaseClasses} ${isActive ? linkActive : linkInactive}`}>
                                 <DatabaseBackup className="w-4 h-4" />Historial de acciones
                             </NavLink>
                         </nav>
