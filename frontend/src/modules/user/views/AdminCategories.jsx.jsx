@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { PencilLine, Trash, PlusCircle, User2, FolderKanban, } from "lucide-react";
+import { PencilLine, Trash, PlusCircle, User2, FolderKanban } from "lucide-react";
 import { FaEllipsisV } from "react-icons/fa";
 import ModalCrearCategoria from "../../../components/ModalCrearCategoria";
 import ModalCrearTarea from "../../../components/ModalCrearTarea";
 import ModalDetalleTarea from "../../../components/ModalDetalleTarea";
+import ModalInvitarUsuarios from "../components/ModalInvitarUsuarios";
 import { useParams } from "react-router-dom";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const AdminCategories = () => {
   const { proyectoId } = useParams();
@@ -31,6 +33,7 @@ const AdminCategories = () => {
   const [mostrarModalTarea, setMostrarModalTarea] = useState(false);
   const [categoriaParaNuevaTarea, setCategoriaParaNuevaTarea] = useState(null);
   const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
+  const [mostrarModalInvitar, setMostrarModalInvitar] = useState(false);
 
   const usuarios = [
     { id: "u1", nombre: "Aurora Núñez" },
@@ -80,7 +83,6 @@ const AdminCategories = () => {
     setMostrarModalTarea(true);
   };
 
-  // Agregar tarea
   const handleAgregarTarea = (nuevaTarea) => {
     const responsable = usuarios.find(u => u.id === nuevaTarea.usuario)?.nombre || "Pendiente";
 
@@ -94,20 +96,18 @@ const AdminCategories = () => {
       id: Date.now(),
       categoria: categoriaParaNuevaTarea,
       responsable,
-      titulo: nuevaTarea.nombre,  // Aquí convierto nombre en titulo para mostrar
+      titulo: nuevaTarea.nombre,
     };
 
     setTareas((prev) => [...prev, tareaFormateada]);
-
     setMostrarModalTarea(false);
     setCategoriaParaNuevaTarea(null);
   };
 
-
   const abrirModalDetalleTarea = (tarea) => {
     setTareaSeleccionada({
       ...tarea,
-      nombre: tarea.titulo, 
+      nombre: tarea.titulo,
     });
   };
 
@@ -122,115 +122,138 @@ const AdminCategories = () => {
     }
   };
 
-  // Guardar cambios en tarea  
   const handleGuardarCambiosTarea = (tareaActualizada) => {
     setTareas((prevTareas) =>
       prevTareas.map((t) =>
         t.id === tareaActualizada.id ? tareaActualizada : t
       )
     );
-
     cerrarModalDetalleTarea();
+  };
+
+  // Manejo de drag and drop
+  const onDragEnd = (result) => {
+    const { source, destination } = result;
+
+    if (!destination ||
+      (source.droppableId === destination.droppableId && source.index === destination.index)
+    ) {
+      return;
+    }
+
+    const tareasFiltradas = tareas.filter(t => t.categoria === source.droppableId);
+    const [tareaMovida] = tareasFiltradas.splice(source.index, 1);
+    tareaMovida.categoria = destination.droppableId;
+
+    const nuevasTareas = tareas
+      .filter(t => t.id !== tareaMovida.id)
+      .concat(tareaMovida);
+
+    setTareas(nuevasTareas);
   };
 
   return (
     <div className="p-3 relative">
-      <h2 className="text-2xl font-bold text-[var(--color-azul-900)] mb-2">Categorías de proyecto: {proyectoId}</h2>
-      <p className="text-gray-600 mb-6">
-        Visualiza las fases y tareas de tu proyecto
-      </p>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-2xl font-bold text-[var(--color-azul-900)]">Categorías de proyecto: {proyectoId}</h2>
+          <p className="text-gray-600">Visualiza las fases y tareas de tu proyecto</p>
+        </div>
+        <button
+          onClick={() => setMostrarModalInvitar(true)}
+          className="bg-cyan-500 text-white px-4 py-2 rounded-md w-40 hover:bg-cyan-600 font-semibold"
+        >
+          Invitar usuarios
+        </button>
+      </div>
 
-      <div
-        className={
-          `overflow-x-auto scroll-cyan transition-all duration-200 
-          ${(mostrarModalCategoria || mostrarModalTarea || tareaSeleccionada) ? "blur-md" : ""
-        }`}
-      >
-        <div className="flex gap-6 w-max pb-4">
-          {categorias.map((categoria) => (
-            <div
-              key={categoria.id}
-              className="min-w-[280px] max-w-xs h-[300px] bg-[var(--color-azul-100)] border border-[var(--color-azul-300)] rounded-xl shadow-sm p-4 flex flex-col"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-base font-semibold text-gray-800">
-                    {categoria.nombre}
-                  </h3>
-                  <p className="text-sm text-gray-600">{categoria.descripcion}</p>
-                  <p className="text-xs font-semibold mt-1">
-                    Estatus: <span className={`${categoria.estatus === "Habilitado" ? "text-green-600" : "text-red-600"}`}>{categoria.estatus}</span>
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleEditarCategoria(categoria)}
-                    className="text-gray-600 hover:text-gray-800"
-                    title="Editar categoría"
-                  >
-                    <PencilLine className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleEliminarCategoria(categoria.id)}
-                    className="text-gray-600 hover:text-red-600"
-                    title="Eliminar categoría"
-                  >
-                    <Trash className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3 mb-4">
-                {tareas.filter((t) => t.categoria === categoria.id).length === 0 && (
-                  <p className="text-sm text-gray-500">No hay tareas</p>
-                )}
-
-                {tareas
-                  .filter((tarea) => tarea.categoria === categoria.id)
-                  .map((tarea) => (
-                    <div key={tarea.id} className="relative">
-                      <div className="bg-white border border-[var(--color-azul-400)] rounded-md p-3 shadow-sm">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="text-sm font-bold text-gray-800">{tarea.titulo}</h4>
-                          <button
-                            onClick={() => abrirModalDetalleTarea(tarea)}
-                            className="text-gray-500 hover:text-gray-800"
-                            title="Ver detalles"
-                          >
-                           <FaEllipsisV />
+      <div className={`${(mostrarModalCategoria || mostrarModalTarea || tareaSeleccionada) ? "blur-md" : ""}`}>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="overflow-x-auto scroll-cyan">
+            <div className="flex gap-6 w-max pb-4 overflow-x-auto">
+              {categorias.map((categoria) => (
+                <Droppable key={categoria.id} droppableId={categoria.id}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="min-w-[280px] max-w-xs min-h-[300px] bg-[var(--color-azul-100)] border border-[var(--color-azul-300)] rounded-xl shadow-sm p-4 flex flex-col"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-base font-semibold text-gray-800">{categoria.nombre}</h3>
+                          <p className="text-sm text-gray-600">{categoria.descripcion}</p>
+                          <p className="text-xs font-semibold mt-1">
+                            Estatus:{" "}
+                            <span className={categoria.estatus === "Habilitado" ? "text-green-600" : "text-red-600"}>
+                              {categoria.estatus}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleEditarCategoria(categoria)} className="text-gray-600 hover:text-gray-800">
+                            <PencilLine className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleEliminarCategoria(categoria.id)} className="text-gray-600 hover:text-red-600">
+                            <Trash className="w-4 h-4" />
                           </button>
                         </div>
-                        <div className="flex items-center text-xs text-gray-600 mb-1">
-                          <FolderKanban className="w-3 h-3 mr-1 text-[var(--color-azul-950)]" />
-                          <span>Proyecto: {nombreProyecto}</span>
-                        </div>
-                        <div className="flex items-center text-xs text-gray-600">
-                          <User2 className="w-3 h-3 mr-1 text-[var(--color-azul-950)]" />
-                          <span>Responsable: {tarea.responsable}</span>
-                        </div>
                       </div>
+
+                      <div className="flex flex-col gap-3 mb-4">
+                        {tareas
+                          .filter((t) => t.categoria === categoria.id)
+                          .map((tarea, index) => (
+                            <Draggable key={tarea.id} draggableId={tarea.id.toString()} index={index}>
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className="bg-white border border-[var(--color-azul-400)] rounded-md p-3 shadow-sm"
+                                >
+                                  <div className="flex justify-between items-start mb-1">
+                                    <h4 className="text-sm font-bold text-gray-800">{tarea.titulo}</h4>
+                                    <button onClick={() => abrirModalDetalleTarea(tarea)} className="text-gray-500 hover:text-gray-800">
+                                      <FaEllipsisV />
+                                    </button>
+                                  </div>
+                                  <div className="flex items-center text-xs text-gray-600 mb-1">
+                                    <FolderKanban className="w-3 h-3 mr-1 text-[var(--color-azul-950)]" />
+                                    <span>Proyecto: {nombreProyecto}</span>
+                                  </div>
+                                  <div className="flex items-center text-xs text-gray-600">
+                                    <User2 className="w-3 h-3 mr-1 text-[var(--color-azul-950)]" />
+                                    <span>Responsable: {tarea.responsable}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                        {provided.placeholder}
+                      </div>
+
+                      <button
+                        onClick={() => abrirModalNuevaTarea(categoria.id)}
+                        className="flex items-center gap-1 text-sm text-[var(--color-azul-800)] hover:underline mt-auto"
+                      >
+                        <PlusCircle className="w-4 h-4" /> Agregar tarea
+                      </button>
                     </div>
-                  ))}
-              </div>
+                  )}
+                </Droppable>
+              ))}
 
-              <button
-                onClick={() => abrirModalNuevaTarea(categoria.id)}
-                className="flex items-center gap-1 text-sm text-[var(--color-azul-800)] hover:underline mt-auto"
+              <div
+                className="min-w-[40px] h-10 bg-[var(--color-azul-100)] border border-[var(--color-azul-300)] rounded-xl shadow-sm flex items-center justify-center cursor-pointer hover:bg-[var(--color-azul-200)]"
+                onClick={abrirModalNuevaCategoria}
+                title="Agregar categoría"
               >
-                <PlusCircle className="w-4 h-4" />
-                Agregar tarea
-              </button>
+                <PlusCircle className="w-6 h-6 text-[var(--color-azul-800)]" />
+              </div>
             </div>
-          ))}
-
-          <div
-            className="min-w-[40px] h-10 bg-[var(--color-azul-100)] border border-[var(--color-azul-300)] rounded-xl shadow-sm flex items-center justify-center cursor-pointer hover:bg-[var(--color-azul-200)]"
-            onClick={abrirModalNuevaCategoria}
-            title="Agregar categoría"
-          >
-            <PlusCircle className="w-6 h-6 text-[var(--color-azul-800)]" />
           </div>
-        </div>
+        </DragDropContext>
       </div>
 
       <ModalCrearCategoria
@@ -262,6 +285,12 @@ const AdminCategories = () => {
           onGuardar={handleGuardarCambiosTarea}
         />
       )}
+
+      <ModalInvitarUsuarios
+        visible={mostrarModalInvitar}
+        onClose={() => setMostrarModalInvitar(false)}
+        onInvitar={(correos) => console.log("Invitar a:", correos)}
+      />
     </div>
   );
 };
