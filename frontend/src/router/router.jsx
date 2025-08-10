@@ -13,6 +13,7 @@ import UserLayout from "../components/Layouts/UserLayout";
 import ProjectsUser from "../modules/user/views/projectsUser";
 import MyUserProfile from "../modules/user/views/profile/UserProfile";
 import Categorias from "../modules/user/views/Categories";
+import AdminCategories from "../modules/user/views/AdminCategories.jsx";
 
 const AppRouter = () => {
   return (
@@ -35,6 +36,7 @@ const AppRouter = () => {
           <Route index element={<Navigate to="misProyectos" replace />} />
           <Route path="misProyectos" element={<ProjectsUser />} />
           <Route path="misCategorias/:proyectoId" element={<Categorias />} />
+          <Route path="adminCategorias/:proyectoId" element={<AdminCategories />} />
           <Route path="perfil" element={<MyUserProfile />} />
         </Route>
 

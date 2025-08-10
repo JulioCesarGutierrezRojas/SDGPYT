@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Pencil, Trash2, Download } from "lucide-react";
+import ModalCrearProyecto from "../../../components/ModalCrearProyecto";
+import ModalEditarProyecto from "../components/ModalEditarProyecto";
 
 const proyectosDummy = [
   {
@@ -9,6 +11,7 @@ const proyectosDummy = [
     abreviacion: "RCSP",
     descripcion: "Restaurante en proceso",
     estatus: "Habilitado",
+    rol: "Administrador",
   },
   {
     id: 2,
@@ -16,6 +19,7 @@ const proyectosDummy = [
     abreviacion: "SR",
     descripcion: "App para hoteles en Morelos",
     estatus: "Deshabilitado",
+    rol: "Usuario", 
   },
 ];
 
@@ -23,6 +27,9 @@ export default function ProjectsUser() {
   const [proyectos, setProyectos] = useState(proyectosDummy);
   const [busqueda, setBusqueda] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
+  const [mostrarModal, setMostrarModal] = useState(false);
   const proyectosPorPagina = 5;
 
   const proyectosFiltrados = proyectos.filter((proyecto) =>
@@ -41,16 +48,49 @@ export default function ProjectsUser() {
     }
   };
 
+  const handleGuardarProyecto = (nuevoProyecto) => {
+    setProyectos((prev) => [
+      ...prev,
+      { ...nuevoProyecto, id: Date.now(), rol: "Administrador" },
+    ]);
+    setModalAbierto(false);
+  };
+
+  const handleEditar = (proyecto) => {
+    setProyectoSeleccionado(proyecto);
+    setMostrarModal(true);
+  };
+
+  const guardarCambios = (proyectoEditado) => {
+    console.log("Guardado en backend:", proyectoEditado);
+  };
+
+  const handleEliminar = (id) => {
+    if (window.confirm("¿Seguro que deseas eliminar este proyecto?")) {
+      setProyectos((prev) => prev.filter((p) => p.id !== id));
+    }
+  };
+
+  const handleCambiarEstatus = (id) => {
+    setProyectos((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? { ...p, estatus: p.estatus === "Habilitado" ? "Deshabilitado" : "Habilitado" }
+          : p
+      )
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-3">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Mis Proyectos</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Gestión de Proyectos</h1>
         <p className="text-gray-600">
-          Visualiza busca y visita tus proyectos registrados en la plataforma.
+          Visualiza, busca y administra los proyectos registrados en la plataforma.
         </p>
       </div>
 
+      {/* Barra de búsqueda y botón */}
       <div className="flex items-center gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -65,8 +105,16 @@ export default function ProjectsUser() {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
           />
         </div>
+
+        <button
+          onClick={() => setModalAbierto(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black rounded-md transition-colors"
+        >
+          Crear un proyecto
+        </button>
       </div>
 
+      {/* Tabla */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
@@ -74,29 +122,90 @@ export default function ProjectsUser() {
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nombre</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Abreviación</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Descripción</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Rol</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Estatus</th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {proyectosPaginados.map((proyecto) => (
-              <tr key={proyecto.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm font-medium text-[var(--color-azul-900)] hover:underline">
-                  <Link to={`/user/misCategorias/${proyecto.id}`}>
-                    {proyecto.nombre}
-                  </Link>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">{proyecto.abreviacion}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{proyecto.descripcion}</td>
-                <td className="px-6 py-4">
-                  <span className={`justify-center items-center inline-flex w-24 px-3 py-1 text-xs font-medium rounded-full
-                    ${proyecto.estatus === "Habilitado"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"}`}>
-                    {proyecto.estatus}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {proyectosPaginados.map((proyecto) => {
+              const esAdmin = proyecto.rol === "Administrador";
+              return (
+                <tr key={proyecto.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm font-medium text-[var(--color-azul-900)] hover:underline">
+                    <Link
+                      to={
+                        esAdmin
+                          ? `/user/adminCategorias/${proyecto.id}`
+                          : `/user/misCategorias/${proyecto.id}`
+                      }
+                    >
+                      {proyecto.nombre}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{proyecto.abreviacion}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700">{proyecto.descripcion}</td>
+
+                  {/* Rol con badge */}
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex w-28 justify-center px-3 py-1 text-xs font-medium rounded-full 
+                        ${esAdmin ? "bg-cyan-100 text-cyan-800" : "bg-gray-200 text-gray-700"}`}
+                    >
+                      {proyecto.rol}
+                    </span>
+                  </td>
+
+                  {/* Estatus */}
+                  <td className="px-6 py-4">
+                    <span
+                      className={`justify-center items-center inline-flex w-24 px-3 py-1 text-xs font-medium rounded-full
+                        ${proyecto.estatus === "Habilitado"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"}`}
+                    >
+                      {proyecto.estatus}
+                    </span>
+                  </td>
+
+                  {/* Acciones */}
+                  <td className="px-6 py-4 flex justify-center gap-2">
+                    <button
+                      onClick={() => esAdmin && handleEditar(proyecto)}
+                      disabled={!esAdmin}
+                      className={`w-7 h-7 flex items-center justify-center rounded transition-colors
+                        ${esAdmin
+                          ? "bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+                    >
+                      <Pencil size={16} />
+                    </button>
+
+                    <button
+                      onClick={() => esAdmin && handleCambiarEstatus(proyecto.id)}
+                      disabled={!esAdmin}
+                      className={`w-7 h-7 flex items-center justify-center rounded transition-colors
+                        ${esAdmin
+                          ? "bg-[var(--color-azul-400)] hover:bg-cyan-300 text-black"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+                    >
+                      <Download size={16} />
+                    </button>
+
+                    <button
+                      onClick={() => esAdmin && handleEliminar(proyecto.id)}
+                      disabled={!esAdmin}
+                      className={`w-7 h-7 flex items-center justify-center rounded transition-colors
+                        ${esAdmin
+                          ? "bg-[var(--color-azul-200)] hover:bg-cyan-300 text-black"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -133,6 +242,23 @@ export default function ProjectsUser() {
           <ChevronRight />
         </button>
       </div>
+
+      {/* Modal Crear Proyecto */}
+      {modalAbierto && (
+        <ModalCrearProyecto
+          onClose={() => setModalAbierto(false)}
+          onGuardar={handleGuardarProyecto}
+        />
+      )}
+
+      {/* Modal Editar Proyecto */}
+      {mostrarModal && (
+        <ModalEditarProyecto
+          proyecto={proyectoSeleccionado}
+          onClose={() => setMostrarModal(false)}
+          onGuardar={guardarCambios}
+        />
+      )}
     </div>
   );
 }

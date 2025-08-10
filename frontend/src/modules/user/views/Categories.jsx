@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User2, FolderKanban, ExternalLink } from "lucide-react";
+import { User2, FolderKanban, ExternalLink, CheckCircle } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useParams } from "react-router-dom";
 
@@ -23,6 +23,7 @@ const ListarCategoriasUsuario = () => {
   ]);
 
   const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
+  const [categoriaAnimada, setCategoriaAnimada] = useState(null);
 
   const handleDragEnd = (result) => {
     const { destination, source, draggableId } = result;
@@ -39,6 +40,12 @@ const ListarCategoriasUsuario = () => {
         t.id === draggableId ? { ...t, categoria: destination.droppableId } : t
       )
     );
+
+    // Si la tarea va a la última categoría, animamos
+    if (destination.droppableId === "done") {
+      setCategoriaAnimada("done");
+      setTimeout(() => setCategoriaAnimada(null), 1000);
+    }
   };
 
   return (
@@ -55,11 +62,17 @@ const ListarCategoriasUsuario = () => {
               <Droppable key={categoria.id} droppableId={categoria.id}>
                 {(provided) => (
                   <div
-                    className="min-w-[280px] max-w-xs h-[300px] bg-[var(--color-azul-100)] border border-[var(--color-azul-300)] rounded-xl shadow-sm p-4 flex flex-col"
+                    className={`min-w-[280px] max-w-xs min-h-[300px] bg-[var(--color-azul-100)] border rounded-xl shadow-sm p-4 flex flex-col relative transition-all duration-300
+                      ${categoriaAnimada === categoria.id ? "border-green-500 ring-2 ring-green-300" : "border-[var(--color-azul-300)]"}`}
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >
-                    <h3 className="text-base font-semibold text-gray-800">{categoria.nombre}</h3>
+                    <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                      {categoria.nombre}
+                      {categoriaAnimada === categoria.id && (
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      )}
+                    </h3>
                     <p className="text-sm text-gray-600">{categoria.descripcion}</p>
                     <p className="text-xs font-semibold mt-1">
                       Estatus:{" "}
