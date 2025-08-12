@@ -3,6 +3,7 @@ package com.praga.backend.modules.categories.controller;
 import com.praga.backend.modules.categories.controller.dto.GetCategoriesByProjectDto;
 import com.praga.backend.modules.categories.controller.dto.UpdateCategoryDto;
 import com.praga.backend.modules.categories.controller.dto.SaveCategoryDto;
+import com.praga.backend.modules.categories.controller.dto.ChangeStatusCategoryDto;
 import com.praga.backend.modules.categories.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,5 +43,11 @@ public class CategoryController {
     @Operation(summary = "Actualizar categoría", description = "Actualiza la información de una categoría existente")
     public ResponseEntity<Object> updateCategory(@Validated @RequestBody UpdateCategoryDto dto) {
         return categoryService.updateCategory(dto);
+    }
+    
+    @PatchMapping("/")
+    @Operation(summary = "Cambiar status de categoría", description = "Cambia el status de una categoría (activa/inactiva)")
+    public ResponseEntity<Object> changeCategoryStatus(@Validated @RequestBody ChangeStatusCategoryDto dto) {
+        return categoryService.changeCategoryStatus(dto);
     }
 }
