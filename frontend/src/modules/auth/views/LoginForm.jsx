@@ -1,20 +1,62 @@
-// src/components/LoginForm.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { login } from '../adapters/auth.controller';
+import { showErrorToast, showSuccessToast } from '../../../kernel/alerts';
+import { validateLoginForm } from '../../../kernel/validations';
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email === "admin@example.com" && password === "1234") {
-      navigate("/dashboard");
-    } else {
-      alert("Credenciales inválidas");
+    
+    // Validar formulario
+    const validation = validateLoginForm(email, password);
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      showErrorToast({
+        title: 'Error de validación',
+        text: 'Por favor corrige los errores en el formulario',
+        timer: 3000
+      });
+      return;
+    }
+    
+    setErrors({});
+    setIsLoading(true);
+
+    try {
+      const response = await login(email, password);
+      
+      showSuccessToast({
+        title: 'Inicio de sesión exitoso',
+        text: response.text
+      });
+
+      const isRootUser = email.toLowerCase() === 'root@gmail.com' || email.toLowerCase() === 'admin@gmail.com';
+      
+      // Redirigir después del toast
+      setTimeout(() => {
+        if (isRootUser) {
+          navigate('/admin');
+        } else {
+          navigate('/user');
+        }
+      }, 2000);
+
+    } catch (error) {
+      showErrorToast({
+        title: 'Error en el inicio de sesión',
+        text: error.message
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,11 +101,21 @@ export default function LoginForm() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) {
+                    setErrors({ ...errors, email: null });
+                  }
+                }}
                 placeholder="Correo electrónico"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-azul-900)] focus:border-transparent outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--color-azul-900)] focus:border-transparent outline-none transition-all duration-200 bg-gray-50 focus:bg-white ${
+                  errors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
                 required
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Input de contraseña */}
@@ -74,9 +126,16 @@ export default function LoginForm() {
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) {
+                    setErrors({ ...errors, password: null });
+                  }
+                }}
                 placeholder="Contraseña"
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-azul-900)] focus:border-transparent outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--color-azul-900)] focus:border-transparent outline-none transition-all duration-200 bg-gray-50 focus:bg-white ${
+                  errors.password ? 'border-red-500' : 'border-gray-300'
+                }`}
                 required
               />
               <button
@@ -90,14 +149,18 @@ export default function LoginForm() {
                   <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                 )}
               </button>
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
 
             {/* Botón de inicio de sesión */}
             <button
               type="submit"
-              className="w-full bg-[var(--color-azul-900)] text-white py-3 px-4 rounded-lg font-semibold hover:bg-[var(--color-azul-950)] focus:ring-2 focus:ring-[var(--color-azul-900)] focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              disabled={isLoading}
+              className="w-full bg-[var(--color-azul-900)] text-white py-3 px-4 rounded-lg font-semibold hover:bg-[var(--color-azul-950)] focus:ring-2 focus:ring-[var(--color-azul-900)] focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              Iniciar Sesión
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
           </form>
 

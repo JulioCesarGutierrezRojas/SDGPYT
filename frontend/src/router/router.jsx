@@ -4,7 +4,7 @@ import Login from "../modules/auth/views/Login";
 import AdminLayout from "../components/Layouts/AdminLayout";
 import UserList from "../modules/admin/views/userList";
 import UserRegister from "../modules/admin/views/userRegister";
-import ForgotPassword from "../modules/auth/views/ForgotPassword";
+import PasswordRecoveryForm from "../modules/auth/views/PasswordRecoveryForm";
 import Register from "../modules/auth/views/Register";
 import UserProfile from "../modules/admin/views/profile/AdminProfile";
 import ProjectsAdmin from "../modules/admin/views/projectsAdmin";
@@ -21,7 +21,7 @@ const AppRouter = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/forgot-password" element={<PasswordRecoveryForm />} />
         <Route path="/register" element={<Register />} />
 
         <Route path="/admin" element={<AdminLayout />}>
