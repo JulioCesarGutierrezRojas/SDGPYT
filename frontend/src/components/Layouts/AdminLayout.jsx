@@ -1,14 +1,33 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { UserRound, FolderKanban, Settings, LogOut, Menu, DatabaseBackup } from "lucide-react";
 import { useState } from "react";
+import { logout } from '../../modules/auth/adapters/auth.controller';
+import { showSuccessToast } from '../../kernel/alerts';
 
 export default function AdminLayout() {
-
+    const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const userName = "Antonio Ortiz";
+    const userName = localStorage.getItem('user') || "Antonio Ortiz";
     const linkBaseClasses = "flex items-center gap-3 px-3 py-2 rounded-md transition-colors";
     const linkInactive = "text-gray-800 hover:bg-cyan-300";
     const linkActive = "bg-cyan-300 text-gray-900 font-semibold";
+
+    const handleLogout = () => {
+        // Limpiar localStorage
+        logout();
+        
+        // Mostrar mensaje de éxito
+        showSuccessToast({
+            title: 'Sesión cerrada',
+            text: 'Has cerrado sesión exitosamente',
+            timer: 2000
+        });
+
+        // Redirigir al login
+        setTimeout(() => {
+            navigate('/');
+        }, 1000);
+    };
 
     return (
         <div className="flex min-h-screen relative overflow-visible">
@@ -66,7 +85,10 @@ export default function AdminLayout() {
                 <div className="p-4">
                     <h3 className="text-gray-700 font-medium mb-3">Sesión</h3>
                     <hr className="border-t border-[var(--color-gris-700)] mb-4" />
-                    <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-azul-500)] border border-[var(--color-azul-400)] text-[var(--color-gris-950)] rounded-md hover:bg-[var(--color-azul-600)] transition-colors">
+                    <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-azul-500)] border border-[var(--color-azul-400)] text-[var(--color-gris-950)] rounded-md hover:bg-[var(--color-azul-600)] transition-colors"
+                    >
                         <LogOut className="w-4 h-4" />
                         Cerrar Sesión
                     </button>
