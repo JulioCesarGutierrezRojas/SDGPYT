@@ -51,26 +51,6 @@ public class ProjectService {
         return new ResponseEntity<>(
                 new ApiResponse<>(projects, TypesResponse.SUCCESS, "Lista de proyectos obtenida correctamente"), HttpStatus.OK);
     }
-//Para solo admin
-    @Transactional(readOnly = true)
-    public ResponseEntity<Object> getProjectsByAdminRole() {
-        List<Project> projects = iProjectUserRepository.findProjectsByRole(Role.ADMIN);
-
-        List<GetProjectsDto> result = projects.stream()
-                .map(p -> new GetProjectsDto(
-                        p.getProjectId(),
-                        p.getName(),
-                        p.getAbbreviation(),
-                        p.getDescription(),
-                        p.getStatus()
-                ))
-                .collect(Collectors.toList());
-
-        return new ResponseEntity<>(
-                new ApiResponse<>(result, TypesResponse.SUCCESS, "Proyectos de administradores obtenidos correctamente."),
-                HttpStatus.OK
-        );
-    }
 
     @Transactional(rollbackFor = {SQLException.class})
     public ResponseEntity<Object> saveProject(SaveProjectDto dto) {
@@ -132,7 +112,7 @@ public class ProjectService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<Object> getAssignedProjects() {
+    public ResponseEntity<Object> getUserProjects() {
         try {
             // Obtener el usuario actual del contexto de seguridad
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -161,16 +141,30 @@ public class ProjectService {
                 );
             }
 
-            // Por ahora retornamos información básica del usuario para debug
+            // Obtener todos los proyectos del usuario con sus roles
+            List<ProjectUser> projectUsers = iProjectUserRepository.findProjectUsersByUser(currentUser);
+            
+            List<GetAssignedProjectsDto> userProjects = projectUsers.stream()
+                    .filter(pu -> pu.getProjectId() != null) // Filtrar proyectos nulos
+                    .map(pu -> new GetAssignedProjectsDto(
+                            pu.getProjectId().getProjectId(),
+                            pu.getProjectId().getName(),
+                            pu.getProjectId().getAbbreviation(),
+                            pu.getProjectId().getDescription(),
+                            pu.getProjectId().getStatus(),
+                            pu.getRole()
+                    ))
+                    .collect(Collectors.toList());
+            
             return new ResponseEntity<>(
-                    new ApiResponse<>(List.of(), TypesResponse.SUCCESS, "Usuario encontrado: " + currentUser.getName() + " " + currentUser.getLastname()),
+                    new ApiResponse<>(userProjects, TypesResponse.SUCCESS, "Proyectos del usuario obtenidos correctamente"),
                     HttpStatus.OK
             );
             
         } catch (Exception e) {
             e.printStackTrace(); // Para debug
             return new ResponseEntity<>(
-                    new ApiResponse<>(null, TypesResponse.ERROR, "Error al obtener proyectos asignados: " + e.getMessage()),
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Error al obtener proyectos del usuario: " + e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
