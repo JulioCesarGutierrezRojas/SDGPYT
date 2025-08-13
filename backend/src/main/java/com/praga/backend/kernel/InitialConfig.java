@@ -42,15 +42,15 @@ public class InitialConfig implements CommandLineRunner {
 
                 ProjectUser projectUser = new ProjectUser();
                 projectUser.setUserId(user);
-                projectUser.setRole(Role.ADMIN);
+                projectUser.setRole(Role.ROOT);
                 projectUserRepository.save(projectUser);
 
-                logger.info("Usuario ADMIN creado correctamente");
+                logger.info("Usuario ROOT creado correctamente");
             } else {
-                logger.info("Usuario MASTER ya existe");
+                logger.info("Usuario ROOT ya existe");
             }
         } catch (Exception e) {
-            logger.error("Error al crear usuario ADMIN: {}", e.getMessage());
+            logger.error("Error al crear usuario ROOT: {}", e.getMessage());
         }
 
     }
