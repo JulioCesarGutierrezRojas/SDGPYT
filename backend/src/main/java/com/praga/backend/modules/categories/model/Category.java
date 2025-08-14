@@ -3,6 +3,7 @@ package com.praga.backend.modules.categories.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.praga.backend.kernel.Auditable;
 import com.praga.backend.modules.tasks.model.Task;
+import com.praga.backend.modules.projects.model.Project;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,6 +29,10 @@ public class Category extends Auditable {
 
     @Column(name = "status", columnDefinition = "BOOLEAN DEFAULT true", nullable = false)
     private Boolean status;
+
+    @ManyToOne
+    @JoinColumn(name = "project_id")
+    private Project project;
 
     @OneToMany(mappedBy = "category")
     @JsonIgnore

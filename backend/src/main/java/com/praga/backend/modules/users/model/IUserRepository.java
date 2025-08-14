@@ -14,4 +14,7 @@ public interface IUserRepository extends JpaRepository<User, Long> {
     Optional<User> findByToken(String token);
     Optional<User> findByPhoneNumber(String phoneNumber);
     boolean existsByPhoneNumber(String phoneNumber);
+    
+    @Query("SELECT u FROM User u JOIN ProjectUser pu ON u.userId = pu.userId.userId WHERE pu.projectId.projectId = :projectId AND u.status = true")
+    List<User> findUsersByProjectId(@Param("projectId") Long projectId);
 }

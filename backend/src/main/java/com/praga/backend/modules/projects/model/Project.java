@@ -3,6 +3,7 @@ package com.praga.backend.modules.projects.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.praga.backend.kernel.Auditable;
 import com.praga.backend.modules.tasks.model.Task;
+import com.praga.backend.modules.categories.model.Category;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,6 +36,10 @@ public class Project extends Auditable {
     @OneToMany(mappedBy = "project")
     @JsonIgnore
     private List<Task> tasks;
+
+    @OneToMany(mappedBy = "project")
+    @JsonIgnore
+    private List<Category> categories;
 
     @OneToMany(mappedBy = "projectId")
     @JsonIgnore

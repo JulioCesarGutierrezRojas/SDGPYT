@@ -1,26 +1,46 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { userService } from '../services/userService';
 
-const ModalCrearTarea = ({ visible, onClose, onGuardar, proyectos, usuarios }) => {
+const ModalCrearTarea = ({ visible, onClose, onGuardar, proyectos, usuarios, proyectoId }) => {
   const [form, setForm] = useState({
     nombre: "",
     descripcion: "",
-    estatus: "activo",
-    proyecto: proyectos?.[0]?.id || "",
-    usuario: usuarios?.[0]?.id || "",
+    usuario: "",
   });
+  const [usuariosProyecto, setUsuariosProyecto] = useState([]);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(false);
 
   useEffect(() => {
-    if (visible) {
+    if (visible && proyectoId) {
+      obtenerUsuariosProyecto();
       setForm({
         nombre: "",
         descripcion: "",
-        estatus: "activo",
-        proyecto: proyectos?.[0]?.id || "",
-        usuario: usuarios?.[0]?.id || "",
+        usuario: "",
       });
     }
-  }, [visible, proyectos, usuarios]);
+  }, [visible, proyectoId]);
+
+  const obtenerUsuariosProyecto = async () => {
+    setLoadingUsuarios(true);
+    try {
+      const response = await userService.getUsersByProject(proyectoId);
+      if (response.type === 'SUCCESS' && response.result) {
+        setUsuariosProyecto(response.result);
+        if (response.result.length > 0) {
+          setForm(prev => ({ ...prev, usuario: response.result[0].userId }));
+        }
+      } else {
+        setUsuariosProyecto([]);
+      }
+    } catch (error) {
+      console.error('Error al obtener usuarios del proyecto:', error);
+      setUsuariosProyecto([]);
+    } finally {
+      setLoadingUsuarios(false);
+    }
+  };
 
   if (!visible) return null;
 
@@ -75,48 +95,28 @@ const ModalCrearTarea = ({ visible, onClose, onGuardar, proyectos, usuarios }) =
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Estatus</label>
-            <select
-              name="estatus"
-              value={form.estatus}
-              onChange={handleChange}
-              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
-            >
-              <option value="activo">Activo</option>
-              <option value="inactivo">Inactivo</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Proyecto</label>
-            <select
-              name="proyecto"
-              value={form.proyecto}
-              onChange={handleChange}
-              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
-            >
-              {proyectos.map((proyecto) => (
-                <option key={proyecto.id} value={proyecto.id}>
-                  {proyecto.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Usuario</label>
+            <label className="block text-sm font-medium text-gray-700">Responsable</label>
             <select
               name="usuario"
               value={form.usuario}
               onChange={handleChange}
-              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
+              disabled={loadingUsuarios}
+              required
+              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)] disabled:opacity-50"
             >
-              {usuarios.map((usuario) => (
-                <option key={usuario.id} value={usuario.id}>
-                  {usuario.nombre}
+              <option value="">Seleccionar responsable</option>
+              {usuariosProyecto.map((usuario) => (
+                <option key={usuario.userId} value={usuario.userId}>
+                  {usuario.name} {usuario.lastname}
                 </option>
               ))}
             </select>
+            {loadingUsuarios && (
+              <p className="text-xs text-gray-500 mt-1">Cargando usuarios...</p>
+            )}
+            {!loadingUsuarios && usuariosProyecto.length === 0 && (
+              <p className="text-xs text-red-500 mt-1">No hay usuarios asignados a este proyecto</p>
+            )}
           </div>
 
           <div className="text-right">

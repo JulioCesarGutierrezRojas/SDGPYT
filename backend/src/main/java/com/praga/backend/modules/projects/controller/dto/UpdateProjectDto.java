@@ -17,4 +17,6 @@ public class UpdateProjectDto {
 
     @NotNull(message = "La descripción es obligatoria")
     private String description;
+    
+    private Long adminUserId; // ID del usuario que será administrador del proyecto
 }

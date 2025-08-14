@@ -2,6 +2,9 @@ package com.praga.backend.modules.projects.controller;
 
 import com.praga.backend.modules.projects.controller.dto.SaveProjectDto;
 import com.praga.backend.modules.projects.controller.dto.UpdateProjectDto;
+import com.praga.backend.modules.projects.controller.dto.ChangeStatusProjectDto;
+import com.praga.backend.modules.projects.controller.dto.GetProjectByIdDto;
+import com.praga.backend.modules.projects.controller.dto.AssignProjectAdminDto;
 import com.praga.backend.modules.projects.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,11 +43,23 @@ public class ProjectController {
     public ResponseEntity<Object> getUserProjects() {
         return projectService.getUserProjects();
     }
+
+    @PostMapping("/by-id")
+    @Operation(summary = "Obtener proyecto por ID", description = "Devuelve un proyecto específico por su ID")
+    public ResponseEntity<Object> getProjectById(@Validated @RequestBody GetProjectByIdDto dto) {
+        return projectService.getProjectById(dto);
+    }
   
     @PatchMapping("/changestatus")
     @Operation(summary = "status del proyecto", description = "Actualiza el proyecto")
-    public ResponseEntity<Object> changeProjectStatus(@Validated @RequestBody UpdateProjectDto dto) {
+    public ResponseEntity<Object> changeProjectStatus(@Validated @RequestBody ChangeStatusProjectDto dto) {
         return projectService.changeProjectStatus(dto);
+    }
+
+    @PostMapping("/assign-admin")
+    @Operation(summary = "Asignar administrador a proyecto", description = "Asigna un usuario como administrador de un proyecto específico")
+    public ResponseEntity<Object> assignProjectAdmin(@Validated @RequestBody AssignProjectAdminDto dto) {
+        return projectService.assignProjectAdmin(dto);
     }
 
 }
