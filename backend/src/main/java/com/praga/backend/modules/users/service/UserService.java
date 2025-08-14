@@ -7,6 +7,7 @@ import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
 import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersDto;
+import com.praga.backend.modules.users.controller.dto.GetUsersByProjectDto;
 import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
@@ -127,5 +128,33 @@ public class UserService {
         userRepository.save(foundUser);
 
         return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<Object> getUsersByProject(GetUsersByProjectDto dto) {
+        List<User> usersInProject = userRepository.findUsersByProjectId(dto.getProjectId());
+        
+        List<GetUsersDto> users = usersInProject.stream()
+                .map(user -> new GetUsersDto(
+                        user.getUserId(),
+                        user.getName(),
+                        user.getLastname(),
+                        user.getEmail(),
+                        user.getPhoneNumber(),
+                        user.getStatus()
+                ))
+                .collect(Collectors.toList());
+        
+        if (users.isEmpty()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(users, TypesResponse.WARNING, "No hay usuarios asignados a este proyecto"), 
+                    HttpStatus.OK
+            );
+        }
+        
+        return new ResponseEntity<>(
+                new ApiResponse<>(users, TypesResponse.SUCCESS, "Usuarios del proyecto obtenidos correctamente"), 
+                HttpStatus.OK
+        );
     }
 }

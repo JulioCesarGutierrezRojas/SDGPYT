@@ -13,4 +13,6 @@ public class GetProjectsDto {
     private String abbreviation;
     private String description;
     private Boolean status;
+    private String adminName;
+    private String adminEmail;
 }

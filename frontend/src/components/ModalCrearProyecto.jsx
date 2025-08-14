@@ -1,23 +1,83 @@
 // src/modules/users/components/ModalCrearProyecto.jsx
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Search, User } from "lucide-react";
+import { getAllUsers } from "../modules/admin/adapters/user.controller";
 
 export default function ModalCrearProyecto({ onClose, onGuardar }) {
   const [nuevoProyecto, setNuevoProyecto] = useState({
     nombre: "",
     abreviacion: "",
     descripcion: "",
-    estatus: "Habilitado",
   });
+  
+  // Estados para la búsqueda y selección de administrador
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuariosFiltrados, setUsuariosFiltrados] = useState([]);
+  const [busquedaAdmin, setBusquedaAdmin] = useState("");
+  const [adminSeleccionado, setAdminSeleccionado] = useState(null);
+  const [mostrarBusqueda, setMostrarBusqueda] = useState(false);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+
+  // Cargar usuarios al montar el componente
+  useEffect(() => {
+    loadUsuarios();
+  }, []);
+
+  const loadUsuarios = async () => {
+    try {
+      setLoadingUsuarios(true);
+      const response = await getAllUsers();
+      if (response.result && Array.isArray(response.result)) {
+        const mappedUsers = response.result.map(user => ({
+          id: user.userId,
+          nombre: `${user.name} ${user.lastname}`,
+          email: user.email
+        }));
+        setUsuarios(mappedUsers);
+        setUsuariosFiltrados(mappedUsers);
+      }
+    } catch (error) {
+      console.error('Error al cargar usuarios:', error);
+    } finally {
+      setLoadingUsuarios(false);
+    }
+  };
+
+  // Filtrar usuarios basado en la búsqueda
+  useEffect(() => {
+    if (busquedaAdmin.trim() === "") {
+      setUsuariosFiltrados(usuarios);
+    } else {
+      const filtrados = usuarios.filter(usuario =>
+        usuario.nombre.toLowerCase().includes(busquedaAdmin.toLowerCase()) ||
+        usuario.email.toLowerCase().includes(busquedaAdmin.toLowerCase())
+      );
+      setUsuariosFiltrados(filtrados);
+    }
+  }, [busquedaAdmin, usuarios]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNuevoProyecto((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleSeleccionarAdmin = (usuario) => {
+    setAdminSeleccionado(usuario);
+    setMostrarBusqueda(false);
+    setBusquedaAdmin("");
+  };
+
+  const handleRemoverAdmin = () => {
+    setAdminSeleccionado(null);
+  };
+
   const handleSubmit = () => {
     if (nuevoProyecto.nombre.trim()) {
-      onGuardar(nuevoProyecto);
+      const proyectoCompleto = {
+        ...nuevoProyecto,
+        adminUserId: adminSeleccionado ? adminSeleccionado.id : null
+      };
+      onGuardar(proyectoCompleto);
       onClose();
     }
   };
@@ -69,18 +129,83 @@ export default function ModalCrearProyecto({ onClose, onGuardar }) {
             />
           </div>
 
+          {/* Sección de Administrador */}
           <div>
-            <label className="block font-medium text-gray-700 mb-1">Estatus</label>
-            <select
-              name="estatus"
-              value={nuevoProyecto.estatus}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
-              <option value="Habilitado">Habilitado</option>
-              <option value="Deshabilitado">Deshabilitado</option>
-            </select>
+            <label className="block font-medium text-gray-700 mb-2">Administrador del Proyecto (Opcional)</label>
+            
+            {adminSeleccionado ? (
+              // Usuario seleccionado
+              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-blue-600" />
+                  <div>
+                    <p className="font-medium text-blue-900">{adminSeleccionado.nombre}</p>
+                    <p className="text-xs text-blue-600">{adminSeleccionado.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleRemoverAdmin}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              // Búsqueda de usuario
+              <div className="relative">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Buscar usuario por nombre o email..."
+                    value={busquedaAdmin}
+                    onChange={(e) => {
+                      setBusquedaAdmin(e.target.value);
+                      setMostrarBusqueda(true);
+                    }}
+                    onFocus={() => setMostrarBusqueda(true)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+                
+                {/* Dropdown de resultados */}
+                {mostrarBusqueda && (
+                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded mt-1 max-h-40 overflow-y-auto z-10 shadow-lg">
+                    {loadingUsuarios ? (
+                      <div className="p-3 text-center text-gray-500">
+                        Cargando usuarios...
+                      </div>
+                    ) : usuariosFiltrados.length === 0 ? (
+                      <div className="p-3 text-center text-gray-500">
+                        {busquedaAdmin.trim() === "" ? "Escribe para buscar usuarios" : "No se encontraron usuarios"}
+                      </div>
+                    ) : (
+                      usuariosFiltrados.map((usuario) => (
+                        <div
+                          key={usuario.id}
+                          onClick={() => handleSeleccionarAdmin(usuario)}
+                          className="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-gray-400" />
+                            <div>
+                              <p className="font-medium text-gray-900">{usuario.nombre}</p>
+                              <p className="text-xs text-gray-500">{usuario.email}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <p className="text-xs text-gray-500 mt-1">
+              El administrador tendrá permisos completos sobre este proyecto
+            </p>
           </div>
+
         </div>
 
         <div className="mt-6 flex justify-end">

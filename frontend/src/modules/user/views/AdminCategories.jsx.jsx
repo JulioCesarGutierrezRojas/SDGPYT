@@ -10,7 +10,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const AdminCategories = () => {
   const { proyectoId } = useParams();
-  const nombreProyecto = "IMG";
+  const [nombreProyecto, setNombreProyecto] = useState("IMG");
 
   const [categorias, setCategorias] = useState([
     { id: "backlog", nombre: "Backlog", descripcion: "Tareas iniciales", estatus: "Habilitado" },
@@ -156,7 +156,7 @@ const AdminCategories = () => {
     <div className="p-3 relative">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h2 className="text-2xl font-bold text-[var(--color-azul-900)]">Categorías de proyecto: {proyectoId}</h2>
+          <h2 className="text-2xl font-bold text-[var(--color-azul-900)]">Categorías de proyecto: {nombreProyecto}</h2>
           <p className="text-gray-600">Visualiza las fases y tareas de tu proyecto</p>
         </div>
         <button
@@ -275,6 +275,7 @@ const AdminCategories = () => {
         onGuardar={handleAgregarTarea}
         proyectos={proyectos}
         usuarios={usuarios}
+        proyectoId={proyectoId}
       />
 
       {tareaSeleccionada && (
@@ -283,6 +284,8 @@ const AdminCategories = () => {
           onClose={cerrarModalDetalleTarea}
           onEliminar={handleEliminarTarea}
           onGuardar={handleGuardarCambiosTarea}
+          usuarios={usuarios}
+          proyectoId={proyectoId}
         />
       )}
 

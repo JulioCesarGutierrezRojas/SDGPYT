@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 
 const ListarCategoriasUsuario = () => {
   const { proyectoId } = useParams();
+  const [nombreProyecto, setNombreProyecto] = useState(proyectoId);
 
   const [categorias] = useState([
     { id: "backlog", nombre: "Backlog", descripcion: "Tareas iniciales", estatus: "Habilitado" },
@@ -51,7 +52,7 @@ const ListarCategoriasUsuario = () => {
   return (
     <div className="p-3 relative">
       <h2 className="text-2xl font-bold text-[var(--color-azul-900)] mb-2">
-        Categorías de proyecto: {proyectoId}
+        Categorías de proyecto: {nombreProyecto}
       </h2>
       <p className="text-gray-600 mb-6">Visualiza las fases y tareas de tu proyecto</p>
 

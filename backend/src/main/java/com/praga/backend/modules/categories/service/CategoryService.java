@@ -10,6 +10,7 @@ import com.praga.backend.modules.categories.controller.dto.ChangeStatusCategoryD
 import com.praga.backend.modules.categories.model.ICategoryRepository;
 import com.praga.backend.modules.categories.model.Category;
 import com.praga.backend.modules.projects.model.IProjectRepository;
+import com.praga.backend.modules.projects.model.Project;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -93,11 +94,11 @@ public class CategoryService {
             );
         }
         
-        // Verificar si ya existe otra categoría con el mismo nombre (excluyendo la actual)
-        Category existingCategory = categoryRepository.findByNameAndCategoryIdNot(dto.getName(), dto.getCategoryId());
+        // Verificar si ya existe otra categoría con el mismo nombre en el mismo proyecto (excluyendo la actual)
+        Category existingCategory = categoryRepository.findByNameAndCategoryIdNotAndProject(dto.getName(), dto.getCategoryId(), category.getProject());
         if (!Objects.isNull(existingCategory)) {
             return new ResponseEntity<>(
-                    new ApiResponse<>(null, TypesResponse.WARNING, "Ya existe una categoría con ese nombre."),
+                    new ApiResponse<>(null, TypesResponse.WARNING, "Ya existe una categoría con ese nombre en este proyecto."),
                     HttpStatus.BAD_REQUEST
             );
         }
@@ -124,11 +125,20 @@ public class CategoryService {
             );
         }
         
-        // Verificar si ya existe una categoría con el mismo nombre
-        Category existingCategory = categoryRepository.findByName(dto.getName().trim());
+        // Validar que el proyecto existe
+        Project project = projectRepository.findById(dto.getProjectId()).orElse(null);
+        if (Objects.isNull(project)) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "El proyecto especificado no existe."),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+        
+        // Verificar si ya existe una categoría con el mismo nombre en el mismo proyecto
+        Category existingCategory = categoryRepository.findByNameAndProject(dto.getName().trim(), project);
         if (!Objects.isNull(existingCategory)) {
             return new ResponseEntity<>(
-                    new ApiResponse<>(null, TypesResponse.WARNING, "Ya existe una categoría con ese nombre."),
+                    new ApiResponse<>(null, TypesResponse.WARNING, "Ya existe una categoría con ese nombre en este proyecto."),
                     HttpStatus.BAD_REQUEST
             );
         }
@@ -138,6 +148,7 @@ public class CategoryService {
         category.setName(dto.getName().trim());
         category.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
         category.setStatus(dto.getStatus() != null ? dto.getStatus() : true);
+        category.setProject(project);
         
         categoryRepository.save(category);
         

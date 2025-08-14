@@ -14,4 +14,10 @@ public interface IProjectUserRepository extends JpaRepository<ProjectUser, Long>
     
     @Query("SELECT pu FROM ProjectUser pu WHERE pu.userId = :user")
     List<ProjectUser> findProjectUsersByUser(@Param("user") User user);
+    
+    @Query("SELECT pu FROM ProjectUser pu WHERE pu.projectId = :project AND pu.role = :role")
+    List<ProjectUser> findByProjectIdAndRole(@Param("project") Project project, @Param("role") Role role);
+    
+    @Query("SELECT pu FROM ProjectUser pu WHERE pu.projectId = :project AND pu.userId = :user")
+    java.util.Optional<ProjectUser> findByProjectIdAndUserId(@Param("project") Project project, @Param("user") User user);
 }

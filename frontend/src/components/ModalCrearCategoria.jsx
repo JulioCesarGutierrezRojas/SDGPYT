@@ -5,7 +5,6 @@ const ModalCrearCategoria = ({ visible, onClose, onGuardar, categoriaEditar }) =
   const [form, setForm] = useState({
     nombre: "",
     descripcion: "",
-    estatus: "activo",
   });
 
   // Carga datos al editar
@@ -14,13 +13,11 @@ const ModalCrearCategoria = ({ visible, onClose, onGuardar, categoriaEditar }) =
       setForm({
         nombre: categoriaEditar.nombre || "",
         descripcion: categoriaEditar.descripcion || "",
-        estatus: categoriaEditar.estatus || "activo",
       });
     } else {
       setForm({
         nombre: "",
         descripcion: "",
-        estatus: "activo",
       });
     }
   }, [categoriaEditar]);
@@ -42,7 +39,7 @@ const ModalCrearCategoria = ({ visible, onClose, onGuardar, categoriaEditar }) =
     });
 
     // Limpiar y cerrar
-    setForm({ nombre: "", descripcion: "", estatus: "activo" });
+    setForm({ nombre: "", descripcion: "" });
     onClose();
   };
 
@@ -86,21 +83,6 @@ const ModalCrearCategoria = ({ visible, onClose, onGuardar, categoriaEditar }) =
               rows={3}
               className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Estatus
-            </label>
-            <select
-              name="estatus"
-              value={form.estatus}
-              onChange={handleChange}
-              className="w-full border border-[var(--color-gris-600)] rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-azul-600)]"
-            >
-              <option value="activo">Activo</option>
-              <option value="inactivo">Inactivo</option>
-            </select>
           </div>
 
           <button

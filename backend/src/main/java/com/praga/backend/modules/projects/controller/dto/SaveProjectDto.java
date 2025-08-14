@@ -18,4 +18,7 @@ public class SaveProjectDto {
     private String description;
 
     private Boolean status;
+
+    // ID del usuario que será administrador del proyecto (opcional)
+    private Long adminUserId;
 }

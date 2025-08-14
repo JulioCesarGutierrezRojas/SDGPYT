@@ -2,7 +2,14 @@ package com.praga.backend.modules.tasks.service;
 
 import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
-import com.praga.backend.modules.tasks.controller.dto.*;
+import com.praga.backend.modules.tasks.controller.dto.SaveTaskDto;
+import com.praga.backend.modules.tasks.controller.dto.GetTasksByProjectDto;
+import com.praga.backend.modules.tasks.controller.dto.GetTasksByCategoryDto;
+import com.praga.backend.modules.tasks.controller.dto.GetTasksByUserDto;
+import com.praga.backend.modules.tasks.controller.dto.GetTasksDto;
+import com.praga.backend.modules.tasks.controller.dto.UpdateTaskDto;
+import com.praga.backend.modules.tasks.controller.dto.UpdateTaskCategoryDto;
+import com.praga.backend.modules.tasks.controller.dto.ChangeStatusTaskDto;
 import com.praga.backend.modules.tasks.model.ITaskRepository;
 import com.praga.backend.modules.tasks.model.Task;
 import com.praga.backend.modules.categories.model.ICategoryRepository;
@@ -301,6 +308,38 @@ public class TaskService {
         
         return new ResponseEntity<>(
                 new ApiResponse<>(null, TypesResponse.SUCCESS, "Tarea eliminada correctamente"),
+                HttpStatus.OK
+        );
+    }
+    
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> updateTaskCategory(UpdateTaskCategoryDto dto) {
+        // Buscar la tarea por ID
+        Task task = taskRepository.findById(dto.getTaskId()).orElse(null);
+        
+        if (Objects.isNull(task)) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "No se encontró la tarea con ID: " + dto.getTaskId()),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+        
+        // Buscar la categoría por ID
+        Category category = categoryRepository.findById(dto.getCategoryId()).orElse(null);
+        
+        if (Objects.isNull(category)) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "No se encontró la categoría con ID: " + dto.getCategoryId()),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+        
+        // Actualizar solo la categoría
+        task.setCategory(category);
+        taskRepository.save(task);
+        
+        return new ResponseEntity<>(
+                new ApiResponse<>(null, TypesResponse.SUCCESS, "Categoría de la tarea actualizada correctamente."),
                 HttpStatus.OK
         );
     }

@@ -4,6 +4,7 @@ import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
 import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
+import com.praga.backend.modules.users.controller.dto.GetUsersByProjectDto;
 import com.praga.backend.modules.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,5 +49,11 @@ public class UserController {
     @Operation(summary = "Actualizar usuario", description = "Actualiza la información de un usuario existente")
     public ResponseEntity<Object> updateUser(@Validated @RequestBody UpdateUserDto userDto) {
         return userService.updateUser(userDto);
+    }
+
+    @PostMapping("/byProject")
+    @Operation(summary = "Obtener usuarios por proyecto", description = "Devuelve todos los usuarios asignados a un proyecto específico")
+    public ResponseEntity<Object> getUsersByProject(@Validated @RequestBody GetUsersByProjectDto dto) {
+        return userService.getUsersByProject(dto);
     }
 }

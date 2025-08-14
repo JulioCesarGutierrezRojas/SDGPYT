@@ -60,6 +60,12 @@ public class TaskController {
         return taskService.changeTaskStatus(dto);
     }
     
+    @PatchMapping("/category")
+    @Operation(summary = "Actualizar categoría de tarea", description = "Actualiza únicamente la categoría de una tarea existente")
+    public ResponseEntity<Object> updateTaskCategory(@Validated @RequestBody UpdateTaskCategoryDto dto) {
+        return taskService.updateTaskCategory(dto);
+    }
+    
     @DeleteMapping("/{taskId}")
     @Operation(summary = "Eliminar tarea", description = "Elimina una tarea del sistema")
     public ResponseEntity<Object> deleteTask(@PathVariable Long taskId) {

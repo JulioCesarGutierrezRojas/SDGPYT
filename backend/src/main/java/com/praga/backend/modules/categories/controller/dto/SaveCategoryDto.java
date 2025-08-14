@@ -19,4 +19,7 @@ public class SaveCategoryDto {
     private String description;
     
     private Boolean status;
+    
+    @NotNull(message = "El proyecto es obligatorio")
+    private Long projectId;
 }
