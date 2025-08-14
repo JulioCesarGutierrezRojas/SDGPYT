@@ -5,17 +5,28 @@ import { Eye, EyeOff } from "lucide-react";
 const EditUserModal = ({ user, onClose, onSave }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    apellidos: user.apellidos || "",
-    email: user.email || "",
     nombre: user.nombre || "",
+    apellidos: user.apellidos || "",
+    email: user.correo || "", // Usar correo del userList
     telefono: user.telefono || "",
     password: "",
   });
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Validaciones específicas por campo
+    if (name === 'nombre' || name === 'apellidos') {
+      // Solo letras y espacios
+      if (!/^[a-zA-Z\s]*$/.test(value)) return;
+    } else if (name === 'telefono') {
+      // Solo números y espacios
+      if (!/^[0-9\s]*$/.test(value)) return;
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
   };
 
@@ -46,6 +57,23 @@ const EditUserModal = ({ user, onClose, onSave }) => {
 
           {/* Formulario */}
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Nombre */}
+            <div>
+              <label htmlFor="nombre" className="block text-sm font-semibold text-gray-700 mb-2">
+                Nombre *
+              </label>
+              <input
+                type="text"
+                id="nombre"
+                name="nombre"
+                placeholder="Ej. Mario Alonso"
+                className="text-sm w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                value={formData.nombre}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
             {/* Apellidos */}
             <div>
               <label htmlFor="apellidos" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -59,6 +87,7 @@ const EditUserModal = ({ user, onClose, onSave }) => {
                 className="text-sm w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 value={formData.apellidos}
                 onChange={handleChange}
+                required
               />
             </div>
 
@@ -75,22 +104,7 @@ const EditUserModal = ({ user, onClose, onSave }) => {
                 className="text-sm w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 value={formData.email}
                 onChange={handleChange}
-              />
-            </div>
-
-            {/* Nombre */}
-            <div>
-              <label htmlFor="nombre" className="block text-sm font-semibold text-gray-700 mb-2">
-                Nombre *
-              </label>
-              <input
-                type="text"
-                id="nombre"
-                name="nombre"
-                placeholder="Ej. Mario Alonso"
-                className="text-sm w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                value={formData.nombre}
-                onChange={handleChange}
+                required
               />
             </div>
 
@@ -107,20 +121,21 @@ const EditUserModal = ({ user, onClose, onSave }) => {
                 className="text-sm w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 value={formData.telefono}
                 onChange={handleChange}
+                required
               />
             </div>
 
             {/* Contraseña */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                Contraseña *
+                Nueva Contraseña (Opcional)
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
-                  placeholder="••••••••"
+                  placeholder="Dejar vacío para mantener la actual"
                   className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   value={formData.password}
                   onChange={handleChange}
@@ -133,6 +148,9 @@ const EditUserModal = ({ user, onClose, onSave }) => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Solo completa este campo si deseas cambiar la contraseña
+              </p>
             </div>
 
             {/* Botones */}
