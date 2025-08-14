@@ -89,6 +89,11 @@ public class UserService {
         if (!Objects.isNull(foundUser))
             return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "Ese correo ya esta en uso."), HttpStatus.BAD_REQUEST);
 
+        User foundUserByPhone = userRepository.findByPhoneNumber(dto.getPhoneNumber()).orElse(null);
+
+        if (!Objects.isNull(foundUserByPhone))
+            return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "Ese número de teléfono ya esta en uso."), HttpStatus.BAD_REQUEST);
+
         User user = new User(dto.getName(), dto.getLastname(), dto.getEmail(), dto.getPhoneNumber(), passwordEncoder.encode(dto.getPassword()));
         user.setStatus(true);
         user.setAttempts(0);
@@ -102,6 +107,16 @@ public class UserService {
 
         if (Objects.isNull(foundUser))
             return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "No existe el usuario."), HttpStatus.NOT_FOUND);
+
+        // Validar email duplicado (excluir el mismo usuario)
+        User existingUserByEmail = userRepository.findByEmail(dto.getEmail()).orElse(null);
+        if (!Objects.isNull(existingUserByEmail) && !existingUserByEmail.getUserId().equals(dto.getId()))
+            return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "Ese correo ya esta en uso."), HttpStatus.BAD_REQUEST);
+
+        // Validar teléfono duplicado (excluir el mismo usuario)
+        User existingUserByPhone = userRepository.findByPhoneNumber(dto.getPhoneNumber()).orElse(null);
+        if (!Objects.isNull(existingUserByPhone) && !existingUserByPhone.getUserId().equals(dto.getId()))
+            return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "Ese número de teléfono ya esta en uso."), HttpStatus.BAD_REQUEST);
 
         foundUser.setName(dto.getName());
         foundUser.setLastname(dto.getLastname());
