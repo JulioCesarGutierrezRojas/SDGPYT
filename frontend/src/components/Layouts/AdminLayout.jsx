@@ -1,16 +1,59 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { UserRound, FolderKanban, Settings, LogOut, Menu, DatabaseBackup } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { logout } from '../../modules/auth/adapters/auth.controller';
 import { showSuccessToast } from '../../kernel/alerts';
+import { getUserById } from '../../modules/admin/adapters/user.controller';
 
 export default function AdminLayout() {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const userName = localStorage.getItem('user') || "Antonio Ortiz";
+    const [userInfo, setUserInfo] = useState({ name: 'Administrador', fullName: 'Cargando...' });
     const linkBaseClasses = "flex items-center gap-3 px-3 py-2 rounded-md transition-colors";
     const linkInactive = "text-gray-800 hover:bg-cyan-300";
     const linkActive = "bg-cyan-300 text-gray-900 font-semibold";
+
+    useEffect(() => {
+        loadUserInfo();
+    }, []);
+
+    const loadUserInfo = async () => {
+        try {
+            // Intentar obtener datos del usuario desde localStorage
+            const userString = localStorage.getItem('user');
+            let userData = {};
+            
+            if (userString) {
+                try {
+                    userData = JSON.parse(userString);
+                } catch (parseError) {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        userData = { id: 1 };
+                    }
+                }
+            }
+
+            const userId = userData.id;
+            if (userId) {
+                // Obtener datos completos del usuario desde el backend
+                const response = await getUserById(userId);
+                if (response.result) {
+                    setUserInfo({
+                        name: 'Administrador',
+                        fullName: `${response.result.name} ${response.result.lastname}`
+                    });
+                } else {
+                    setUserInfo({ name: 'Administrador', fullName: 'Usuario Admin' });
+                }
+            } else {
+                setUserInfo({ name: 'Administrador', fullName: 'Usuario Admin' });
+            }
+        } catch (error) {
+            console.error('Error al cargar información del usuario:', error);
+            setUserInfo({ name: 'Administrador', fullName: 'Usuario Admin' });
+        }
+    };
 
     const handleLogout = () => {
         // Limpiar localStorage
@@ -53,8 +96,8 @@ export default function AdminLayout() {
                         </div>
                     </div>
                     <div className="text-gray-800">
-                        <div className="font-semibold">Administrador</div>
-                        <div className="text-sm text-gray-600">{userName}</div>
+                        <div className="font-semibold">{userInfo.name}</div>
+                        <div className="text-sm text-gray-600">{userInfo.fullName}</div>
                     </div>
                 </div>
 

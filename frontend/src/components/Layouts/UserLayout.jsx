@@ -1,16 +1,66 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { FolderKanban, Settings, LogOut, Menu } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { logout } from '../../modules/auth/adapters/auth.controller';
 import { showSuccessToast } from '../../kernel/alerts';
+import { getUserById } from '../../modules/admin/adapters/user.controller';
 
 export default function UserLayout() {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const userName = "Antonio Ortiz";
+    const [userInfo, setUserInfo] = useState({
+        name: 'Cargando...',
+        fullName: 'Cargando...'
+    });
     const linkBaseClasses = "flex items-center gap-3 px-3 py-2 rounded-md transition-colors";
     const linkInactive = "text-gray-800 hover:bg-cyan-300";
     const linkActive = "bg-cyan-300 text-gray-900 font-semibold";
+
+    const loadUserData = async () => {
+        try {
+            // Obtener datos del localStorage - user es solo el fullName como string
+            const fullName = localStorage.getItem('user');
+            const userId = localStorage.getItem('userId');
+            
+            if (!userId) {
+                setUserInfo({
+                    name: 'Usuario',
+                    fullName: fullName || 'Usuario'
+                });
+                return;
+            }
+
+            const response = await getUserById(userId);
+            if (response.result) {
+                const userDataFromAPI = {
+                    name: response.result.name,
+                    lastname: response.result.lastname
+                };
+                setUserInfo({
+                    name: userDataFromAPI.name || 'Usuario',
+                    fullName: `${userDataFromAPI.name || 'Usuario'} ${userDataFromAPI.lastname || ''}`.trim()
+                });
+            } else {
+                // Usar el fullName del localStorage si no se puede obtener del API
+                setUserInfo({
+                    name: fullName || 'Usuario',
+                    fullName: fullName || 'Usuario'
+                });
+            }
+        } catch (error) {
+            console.error('Error al cargar datos del usuario:', error);
+            // Usar el fullName del localStorage como fallback
+            const fullName = localStorage.getItem('user');
+            setUserInfo({
+                name: fullName || 'Usuario',
+                fullName: fullName || 'Usuario'
+            });
+        }
+    };
+
+    useEffect(() => {
+        loadUserData();
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -49,8 +99,8 @@ export default function UserLayout() {
                         </div>
                     </div>
                     <div className="text-gray-800">
-                        <div className="font-semibold">Usuario Colaborador</div>
-                        <div className="text-sm text-gray-600">{userName}</div>
+                        <div className="font-semibold text-lg">{userInfo.fullName}</div>
+                        <div className="text-sm text-gray-600">Usuario Colaborador</div>
                     </div>
                 </div>
 

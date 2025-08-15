@@ -27,7 +27,7 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    @GetMapping("/")
+    @PostMapping("/byId")
     @Operation(summary = "Obtener un usuario por ID", description = "Devuelve un usuario específico por su ID")
     public ResponseEntity<Object> getUserById(@Validated @RequestBody GetUserDto dto) {
         return userService.getUserById(dto);
