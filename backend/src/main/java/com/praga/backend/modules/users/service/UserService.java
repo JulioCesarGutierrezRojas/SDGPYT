@@ -11,6 +11,7 @@ import com.praga.backend.modules.users.controller.dto.GetUsersByProjectDto;
 import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
+import com.praga.backend.modules.projects.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 public class UserService {
     private final IUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ProjectService projectService;
 
     @Transactional(readOnly = true)
     public ResponseEntity<Object> getAllUsers() {
@@ -99,6 +101,14 @@ public class UserService {
         user.setStatus(true);
         user.setAttempts(0);
         userRepository.save(user);
+
+        // Procesar invitaciones pendientes después del registro
+        try {
+            projectService.processPendingInvitations(dto.getEmail());
+        } catch (Exception e) {
+            // Log error but don't fail the registration
+            e.printStackTrace();
+        }
 
         return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario registrado correctamente"), HttpStatus.OK);
     }

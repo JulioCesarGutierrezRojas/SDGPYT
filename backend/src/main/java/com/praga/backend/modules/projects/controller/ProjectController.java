@@ -5,6 +5,9 @@ import com.praga.backend.modules.projects.controller.dto.UpdateProjectDto;
 import com.praga.backend.modules.projects.controller.dto.ChangeStatusProjectDto;
 import com.praga.backend.modules.projects.controller.dto.GetProjectByIdDto;
 import com.praga.backend.modules.projects.controller.dto.AssignProjectAdminDto;
+import com.praga.backend.modules.projects.controller.dto.SendInvitationsDto;
+import com.praga.backend.modules.projects.controller.dto.AcceptInvitationDto;
+import com.praga.backend.modules.projects.controller.dto.AcceptInvitationGuestDto;
 import com.praga.backend.modules.projects.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -60,6 +63,24 @@ public class ProjectController {
     @Operation(summary = "Asignar administrador a proyecto", description = "Asigna un usuario como administrador de un proyecto específico")
     public ResponseEntity<Object> assignProjectAdmin(@Validated @RequestBody AssignProjectAdminDto dto) {
         return projectService.assignProjectAdmin(dto);
+    }
+
+    @PostMapping("/send-invitations")
+    @Operation(summary = "Enviar invitaciones al proyecto", description = "Envía invitaciones por correo electrónico a múltiples usuarios para unirse al proyecto")
+    public ResponseEntity<Object> sendProjectInvitations(@Validated @RequestBody SendInvitationsDto dto) {
+        return projectService.sendProjectInvitations(dto);
+    }
+
+    @PostMapping("/accept-invitation")
+    @Operation(summary = "Aceptar invitación al proyecto", description = "Permite a un usuario unirse al proyecto como colaborador con rol USER")
+    public ResponseEntity<Object> acceptProjectInvitation(@Validated @RequestBody AcceptInvitationDto dto) {
+        return projectService.acceptProjectInvitation(dto);
+    }
+
+    @PostMapping("/accept-invitation-guest")
+    @Operation(summary = "Aceptar invitación como invitado", description = "Permite a un usuario no registrado aceptar una invitación que se procesará cuando se registre")
+    public ResponseEntity<Object> acceptProjectInvitationAsGuest(@Validated @RequestBody AcceptInvitationGuestDto dto) {
+        return projectService.acceptProjectInvitationAsGuest(dto);
     }
 
 }

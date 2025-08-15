@@ -15,14 +15,22 @@ import MyUserProfile from "../modules/user/views/profile/UserProfile";
 import Categorias from "../modules/user/views/Categories";
 import AdminCategories from "../modules/user/views/AdminCategories.jsx";
 import BitacoraAcciones from "../modules/admin/views/BitacoraAcciones.jsx";
+import JoinProject from "../modules/user/views/JoinProject.jsx";
+import ProjectInvitation from "../components/ProjectInvitation.jsx";
 
 const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/auth/signin" element={<Login />} />
+        <Route path="/auth/signup" element={<Register />} />
         <Route path="/forgot-password" element={<PasswordRecoveryForm />} />
         <Route path="/register" element={<Register />} />
+        
+        {/* Rutas públicas para invitaciones */}
+        <Route path="/project/:id/join" element={<JoinProject />} />
+        <Route path="/invitation/:projectId" element={<ProjectInvitation />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="usuarios" replace />} />

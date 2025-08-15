@@ -1,36 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, ChevronLeft, ChevronRight, Pencil, Trash2, Download } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Pencil, Download, Plus } from "lucide-react";
+import { showConfirmation, showSuccessToast, showErrorToast } from "../../../kernel/alerts";
 import ModalCrearProyecto from "../../../components/ModalCrearProyecto";
 import ModalEditarProyecto from "../components/ModalEditarProyecto";
-
-const proyectosDummy = [
-  {
-    id: 1,
-    nombre: "Restaurante café sin pan",
-    abreviacion: "RCSP",
-    descripcion: "Restaurante en proceso",
-    estatus: "Habilitado",
-    rol: "Administrador",
-  },
-  {
-    id: 2,
-    nombre: "Sistema de Reservas",
-    abreviacion: "SR",
-    descripcion: "App para hoteles en Morelos",
-    estatus: "Deshabilitado",
-    rol: "Usuario", 
-  },
-];
+import { getUserProjects, createProject, updateProject, changeProjectStatus } from "../adapters/project.controller";
 
 export default function ProjectsUser() {
-  const [proyectos, setProyectos] = useState(proyectosDummy);
+  const [proyectos, setProyectos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const proyectosPorPagina = 5;
+
+  // Cargar proyectos al montar el componente
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      const response = await getUserProjects();
+      if (response.result && Array.isArray(response.result)) {
+        // Mapear los campos del backend a los del frontend
+        const mappedProjects = response.result.map(project => {
+          // Mapear roles del backend al frontend
+          let rolMapeado = "Usuario";
+          if (project.role === "PROJECT_ADMIN") {
+            rolMapeado = "Administrador";
+          } else if (project.role === "PROJECT_USER") {
+            rolMapeado = "Usuario";
+          }
+
+          return {
+            id: project.projectId,
+            nombre: project.name,
+            abreviacion: project.abbreviation,
+            descripcion: project.description,
+            estatus: project.status ? "Habilitado" : "Deshabilitado",
+            rol: rolMapeado
+          };
+        });
+        setProyectos(mappedProjects);
+      } else {
+        setProyectos([]);
+      }
+    } catch (error) {
+      console.error('Error al cargar proyectos:', error);
+      showErrorToast({
+        title: 'Error',
+        text: 'No se pudieron cargar los proyectos asignados'
+      });
+      setProyectos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const proyectosFiltrados = proyectos.filter((proyecto) =>
     proyecto.nombre.toLowerCase().includes(busqueda.toLowerCase())
@@ -48,12 +77,29 @@ export default function ProjectsUser() {
     }
   };
 
-  const handleGuardarProyecto = (nuevoProyecto) => {
-    setProyectos((prev) => [
-      ...prev,
-      { ...nuevoProyecto, id: Date.now(), rol: "Administrador" },
-    ]);
-    setModalAbierto(false);
+  const handleGuardarProyecto = async (nuevoProyecto) => {
+    try {
+      const response = await createProject(
+        nuevoProyecto.nombre,
+        nuevoProyecto.abreviacion,
+        nuevoProyecto.descripcion,
+        nuevoProyecto.adminUserId
+      );
+      
+      showSuccessToast({
+        title: 'Proyecto creado',
+        text: 'El proyecto se ha creado correctamente'
+      });
+      
+      setModalAbierto(false);
+      await loadProjects(); // Recargar la lista
+    } catch (error) {
+      console.error('Error al crear proyecto:', error);
+      showErrorToast({
+        title: 'Error',
+        text: error.message || 'No se pudo crear el proyecto'
+      });
+    }
   };
 
   const handleEditar = (proyecto) => {
@@ -61,24 +107,49 @@ export default function ProjectsUser() {
     setMostrarModal(true);
   };
 
-  const guardarCambios = (proyectoEditado) => {
-    console.log("Guardado en backend:", proyectoEditado);
-  };
+  const guardarCambios = async (proyectoEditado) => {
+    try {
+      // Solo los administradores pueden editar proyectos
+      const response = await updateProject(
+        proyectoSeleccionado.id,
+        proyectoEditado.nombre,
+        proyectoEditado.abreviacion,
+        proyectoEditado.descripcion
+      );
 
-  const handleEliminar = (id) => {
-    if (window.confirm("¿Seguro que deseas eliminar este proyecto?")) {
-      setProyectos((prev) => prev.filter((p) => p.id !== id));
+      showSuccessToast({
+        title: 'Proyecto actualizado',
+        text: 'Los datos del proyecto se han actualizado correctamente'
+      });
+      
+      setMostrarModal(false);
+      await loadProjects(); // Recargar la lista
+    } catch (error) {
+      console.error('Error al actualizar proyecto:', error);
+      showErrorToast({
+        title: 'Error',
+        text: error.message || 'No se pudo actualizar el proyecto'
+      });
     }
   };
 
-  const handleCambiarEstatus = (id) => {
-    setProyectos((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? { ...p, estatus: p.estatus === "Habilitado" ? "Deshabilitado" : "Habilitado" }
-          : p
-      )
-    );
+  const handleCambiarEstatus = async (proyecto) => {
+    try {
+      await changeProjectStatus(proyecto.id);
+      
+      showSuccessToast({
+        title: 'Estado actualizado',
+        text: `El estado de ${proyecto.nombre} ha sido actualizado correctamente`
+      });
+      
+      await loadProjects(); // Recargar la lista
+    } catch (error) {
+      console.error('Error al cambiar estado del proyecto:', error);
+      showErrorToast({
+        title: 'Error',
+        text: error.message || 'No se pudo cambiar el estado del proyecto'
+      });
+    }
   };
 
   return (
@@ -110,7 +181,8 @@ export default function ProjectsUser() {
           onClick={() => setModalAbierto(true)}
           className="flex items-center gap-2 px-4 py-2 bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black rounded-md transition-colors"
         >
-          Crear un proyecto
+          <Plus className="w-4 h-4" />
+          Crear
         </button>
       </div>
 
@@ -128,11 +200,34 @@ export default function ProjectsUser() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {proyectosPaginados.map((proyecto) => {
-              const esAdmin = proyecto.rol === "Administrador";
-              return (
-                <tr key={proyecto.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm font-medium text-[var(--color-azul-900)] hover:underline">
+            {loading ? (
+              <tr>
+                <td colSpan="6" className="px-6 py-12 text-center">
+                  <div className="flex justify-center items-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-azul-600)]"></div>
+                    <span className="ml-3 text-sm text-gray-600">Cargando proyectos...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : proyectosPaginados.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="px-6 py-12 text-center">
+                  <div className="text-gray-500">
+                    <p className="text-base font-medium">No hay datos</p>
+                    <p className="text-sm mt-1">
+                      {proyectosFiltrados.length === 0 && proyectos.length > 0 
+                        ? "No se encontraron proyectos que coincidan con la búsqueda" 
+                        : "No tienes proyectos asignados"}
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              proyectosPaginados.map((proyecto) => {
+                const esAdmin = proyecto.rol === "Administrador";
+                return (
+                  <tr key={proyecto.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-[var(--color-azul-900)] hover:underline">
                     <Link
                       to={
                         esAdmin
@@ -177,71 +272,76 @@ export default function ProjectsUser() {
                         ${esAdmin
                           ? "bg-[var(--color-azul-600)] hover:bg-cyan-300 text-black"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+                      title={esAdmin ? "Editar proyecto" : "Solo administradores pueden editar"}
                     >
                       <Pencil size={16} />
                     </button>
 
-                    <button
-                      onClick={() => esAdmin && handleCambiarEstatus(proyecto.id)}
+                    <button 
+                      onClick={() => {
+                        if (esAdmin) {
+                          const nuevoEstado = proyecto.estatus === "Habilitado" ? "Deshabilitado" : "Habilitado";
+                          showConfirmation(
+                            "Cambiar estado",
+                            `¿Deseas cambiar el estado de ${proyecto.nombre} a ${nuevoEstado}?`,
+                            "question",
+                            () => handleCambiarEstatus(proyecto),
+                            () => console.log("Cambio cancelado")
+                          );
+                        }
+                      }}
                       disabled={!esAdmin}
                       className={`w-7 h-7 flex items-center justify-center rounded transition-colors
                         ${esAdmin
                           ? "bg-[var(--color-azul-400)] hover:bg-cyan-300 text-black"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+                      title={esAdmin ? "Cambiar estado" : "Solo administradores pueden cambiar el estado"}
                     >
                       <Download size={16} />
-                    </button>
-
-                    <button
-                      onClick={() => esAdmin && handleEliminar(proyecto.id)}
-                      disabled={!esAdmin}
-                      className={`w-7 h-7 flex items-center justify-center rounded transition-colors
-                        ${esAdmin
-                          ? "bg-[var(--color-azul-200)] hover:bg-cyan-300 text-black"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
-                    >
-                      <Trash2 size={16} />
                     </button>
                   </td>
                 </tr>
               );
-            })}
+            })
+          )}
           </tbody>
         </table>
       </div>
 
-      {/* Paginación */}
-      <div className="flex items-center justify-center gap-2 mt-6">
-        <button
-          onClick={() => cambiarPagina(paginaActual - 1)}
-          disabled={paginaActual === 1}
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 text-xs hover:bg-gray-100 disabled:opacity-50"
-        >
-          <ChevronLeft />
-        </button>
-
-        {Array.from({ length: totalPaginas }, (_, i) => (
+      {/* Paginación - Solo mostrar si hay proyectos y más de una página */}
+      {!loading && totalPaginas > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
           <button
-            key={i}
-            onClick={() => cambiarPagina(i + 1)}
-            className={`w-8 h-8 flex items-center justify-center rounded-full text-xs 
-              ${paginaActual === i + 1
-                ? "bg-[var(--color-azul-600)] text-white"
-                : "border border-gray-300 hover:bg-gray-100"
-              }`}
+            onClick={() => cambiarPagina(paginaActual - 1)}
+            disabled={paginaActual === 1}
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 text-xs hover:bg-gray-100 disabled:opacity-50"
           >
-            {i + 1}
+            <ChevronLeft />
           </button>
-        ))}
 
-        <button
-          onClick={() => cambiarPagina(paginaActual + 1)}
-          disabled={paginaActual === totalPaginas}
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 text-xs hover:bg-gray-100 disabled:opacity-50"
-        >
-          <ChevronRight />
-        </button>
-      </div>
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => cambiarPagina(i + 1)}
+              className={`w-8 h-8 flex items-center justify-center rounded-full text-xs 
+                ${paginaActual === i + 1
+                  ? "bg-[var(--color-azul-600)] text-white"
+                  : "border border-gray-300 hover:bg-gray-100"
+                }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => cambiarPagina(paginaActual + 1)}
+            disabled={paginaActual === totalPaginas}
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 text-xs hover:bg-gray-100 disabled:opacity-50"
+          >
+            <ChevronRight />
+          </button>
+        </div>
+      )}
 
       {/* Modal Crear Proyecto */}
       {modalAbierto && (
