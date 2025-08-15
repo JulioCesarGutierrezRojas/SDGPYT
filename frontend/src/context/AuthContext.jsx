@@ -44,6 +44,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
+        // Marcar que el logout está en progreso para evitar toasts de error
+        sessionStorage.setItem('logout_in_progress', 'true');
+        
         const token = localStorage.getItem("token");
         
         // Si hay token, intentar invalidarlo en el backend usando el servicio
@@ -69,6 +72,11 @@ export const AuthProvider = ({ children }) => {
             title: 'Sesión cerrada',
             text: 'Sesión cerrada correctamente'
         });
+        
+        // Limpiar la bandera de logout en progreso después de un breve delay
+        setTimeout(() => {
+            sessionStorage.removeItem('logout_in_progress');
+        }, 1000);
     };
 
     return (

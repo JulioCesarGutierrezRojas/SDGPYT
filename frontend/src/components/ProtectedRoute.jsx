@@ -54,8 +54,9 @@ const ProtectedRoute = ({ children, role }) => {
         // Generar una clave única para esta sesión de navegación y rol
         const toastKey = `toast_shown_${role || 'no-role'}_${user?.id || 'no-user'}`;
         const hasShownInSession = sessionStorage.getItem(toastKey);
+        const isLogoutInProgress = sessionStorage.getItem('logout_in_progress');
         
-        if (!hasShownToast.current && !hasShownInSession) {
+        if (!hasShownToast.current && !hasShownInSession && !isLogoutInProgress) {
             if (!user) {
                 showErrorToast({
                     title: "Acceso denegado",
