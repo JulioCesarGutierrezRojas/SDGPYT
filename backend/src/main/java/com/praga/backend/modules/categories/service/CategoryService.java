@@ -11,6 +11,7 @@ import com.praga.backend.modules.categories.model.ICategoryRepository;
 import com.praga.backend.modules.categories.model.Category;
 import com.praga.backend.modules.projects.model.IProjectRepository;
 import com.praga.backend.modules.projects.model.Project;
+import com.praga.backend.modules.tasks.model.ITaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ public class CategoryService {
     
     private final ICategoryRepository categoryRepository;
     private final IProjectRepository projectRepository;
+    private final ITaskRepository taskRepository;
     
     @Transactional(readOnly = true)
     public ResponseEntity<Object> getActiveCategories() {
@@ -167,6 +169,17 @@ public class CategoryService {
                     new ApiResponse<>(null, TypesResponse.WARNING, "No existe la categoría."), 
                     HttpStatus.NOT_FOUND
             );
+        }
+        
+        // Si se está intentando deshabilitar la categoría, verificar que no tenga tareas activas
+        if (category.getStatus()) { // Si actualmente está habilitada y se va a deshabilitar
+            long activeTasks = taskRepository.countActiveByCategoryId(dto.getCategoryId());
+            if (activeTasks > 0) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "No se puede deshabilitar una categoría que tiene tareas activas asignadas."), 
+                        HttpStatus.BAD_REQUEST
+                );
+            }
         }
         
         category.setStatus(!category.getStatus());

@@ -334,6 +334,14 @@ public class TaskService {
             );
         }
         
+        // Validar que la categoría esté habilitada
+        if (!category.getStatus()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "No se pueden mover tareas a una categoría deshabilitada."),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        
         // Actualizar solo la categoría
         task.setCategory(category);
         taskRepository.save(task);

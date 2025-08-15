@@ -4,12 +4,9 @@ import { showErrorToast, showWarningToast } from "../kernel/alerts";
 import { useEffect, useRef } from "react";
 
 const ProtectedRoute = ({ children, role }) => {
-    console.log('🛡️ PROTECTED ROUTE - Starting validation for role:', role);
     
     const { user } = useAuth();
     const hasShownToast = useRef(false);
-    
-    console.log('🛡️ PROTECTED ROUTE - Current user:', user);
 
     // Función para obtener la ruta del dashboard según el rol
     const getDashboardRoute = (userRoles) => {
@@ -34,15 +31,7 @@ const ProtectedRoute = ({ children, role }) => {
 
     // Función para verificar si el usuario tiene el rol requerido
     const hasRequiredRole = (userRoles, requiredRole) => {
-        console.log('🔍 DEBUG - hasRequiredRole:', {
-            userRoles,
-            requiredRole,
-            userRolesType: typeof userRoles,
-            isArray: Array.isArray(userRoles)
-        });
-        
         if (!requiredRole || !userRoles) {
-            console.log('🔍 DEBUG - No role required or no user roles, returning true');
             return true;
         }
         
@@ -51,34 +40,21 @@ const ProtectedRoute = ({ children, role }) => {
             const userRoleLower = roleString.toLowerCase();
             const requiredRoleLower = requiredRole.toLowerCase();
             
-            console.log('🔍 DEBUG - Checking role:', {
-                userRole,
-                roleString,
-                userRoleLower,
-                requiredRoleLower
-            });
-            
             // Handle role mappings - only ROOT can access admin routes
             if (requiredRoleLower === 'admin' && userRoleLower === 'root') {
-                console.log('✅ ROOT can access admin routes');
                 return true;
             }
             
             // Handle role mappings for user routes - PROJECT_ADMIN and USER can access user routes
             if (requiredRoleLower === 'user' && (userRoleLower === 'project_admin' || userRoleLower === 'user')) {
-                console.log('✅ PROJECT_ADMIN/USER can access user routes');
                 return true;
             }
-            
+
             const exactMatch = userRoleLower === requiredRoleLower;
-            if (exactMatch) {
-                console.log('✅ Exact role match');
-            }
-            
+
             return exactMatch;
         });
-        
-        console.log('🔍 DEBUG - Final result:', result);
+
         return result;
     };
 

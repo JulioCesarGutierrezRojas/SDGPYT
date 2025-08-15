@@ -27,4 +27,7 @@ public interface ITaskRepository extends JpaRepository<Task, Long> {
     
     @Query("SELECT t FROM Task t WHERE t.name = :name AND t.project.projectId = :projectId AND t.taskId != :taskId")
     Task findByNameAndProjectAndTaskIdNot(@Param("name") String name, @Param("projectId") Long projectId, @Param("taskId") Long taskId);
+    
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.category.categoryId = :categoryId AND t.status = true")
+    long countActiveByCategoryId(@Param("categoryId") Long categoryId);
 }

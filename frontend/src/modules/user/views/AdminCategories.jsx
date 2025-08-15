@@ -20,10 +20,8 @@ import { getAllUsers } from "../../admin/adapters/user.controller";
 import { sendProjectInvitations } from "../adapters/invitation.controller";
 
 const AdminCategories = () => {
-  console.log('🚀 ADMIN CATEGORIES - Component rendering started');
   
   const { proyectoId } = useParams();
-  console.log('🚀 ADMIN CATEGORIES - proyectoId:', proyectoId);
   
   // Obtener información del usuario actual
   const getCurrentUser = () => {
@@ -92,17 +90,13 @@ const AdminCategories = () => {
 
   const loadInitialData = async () => {
     try {
-      console.log('🔍 DEBUG - loadInitialData: Starting...');
       setLoading(true);
-      console.log('🔍 DEBUG - loadInitialData: Loading promise all...');
       await Promise.all([
         loadCategorias(),
         loadTareas(),
         loadProjectName()
       ]);
-      console.log('🔍 DEBUG - loadInitialData: All data loaded successfully');
     } catch (error) {
-      console.error('❌ ERROR - loadInitialData failed:', error);
       showErrorToast({
         title: 'Error',
         text: 'No se pudieron cargar los datos del proyecto'
@@ -153,10 +147,10 @@ const AdminCategories = () => {
           titulo: task.name,
           descripcion: task.description,
           categoria: task.categoryId,
-          responsable: task.assignedUserName || "Sin asignar",
+          responsable: task.userName || "Sin asignar",
           estatus: task.status ? "activo" : "inactivo",
           proyecto: task.projectId,
-          usuario: task.assignedUserId
+          usuario: task.userId
         }));
         setTareas(mappedTasks);
       } else {
@@ -307,13 +301,42 @@ const AdminCategories = () => {
     }
   };
 
-  const handleGuardarCambiosTarea = (tareaActualizada) => {
-    setTareas((prevTareas) =>
-      prevTareas.map((t) =>
-        t.id === tareaActualizada.id ? tareaActualizada : t
-      )
-    );
-    cerrarModalDetalleTarea();
+  const handleGuardarCambiosTarea = async (tareaActualizada) => {
+    try {
+      // Llamar a la API de administrador para actualizar la tarea
+      await updateTask(
+        tareaActualizada.id,
+        tareaActualizada.titulo || tareaActualizada.nombre,
+        tareaActualizada.descripcion,
+        tareaActualizada.categoria,
+        tareaActualizada.usuario
+      );
+      
+      // Actualizar el estado local
+      setTareas((prevTareas) =>
+        prevTareas.map((t) =>
+          t.id === tareaActualizada.id ? tareaActualizada : t
+        )
+      );
+      
+      // Mostrar toast de éxito
+      showSuccessToast({
+        title: 'Tarea actualizada',
+        text: 'Los cambios se han guardado correctamente'
+      });
+      
+      cerrarModalDetalleTarea();
+      
+      // Recargar las tareas para asegurar que los datos estén sincronizados
+      await loadTareas();
+      
+    } catch (error) {
+      console.error('Error al actualizar tarea:', error);
+      showErrorToast({
+        title: 'Error',
+        text: error.message || 'No se pudo actualizar la tarea'
+      });
+    }
   };
 
   const handleCambiarEstatusTarea = async (tarea) => {

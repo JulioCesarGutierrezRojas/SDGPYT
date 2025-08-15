@@ -14,10 +14,7 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem("token");
 
         if (name && roles && userId && token) {
-            console.log('🔍 DEBUG - AuthContext loading user:', { name, roles, userId, token: token ? 'present' : 'missing' });
-            
             const parsedRoles = JSON.parse(roles);
-            console.log('🔍 DEBUG - Parsed roles:', parsedRoles);
             
             // Extract unique role strings from the backend format
             // Backend returns: [{role: "PROJECT_ADMIN", project: "Project Name"}, ...]
@@ -31,8 +28,6 @@ export const AuthProvider = ({ children }) => {
                 }
             }))];
             
-            console.log('🔍 DEBUG - Final role strings:', roleStrings);
-            
             // Para compatibilidad, usar el primer rol como rol principal
             const primaryRole = roleStrings.length > 0 ? roleStrings[0] : null;
             
@@ -43,8 +38,7 @@ export const AuthProvider = ({ children }) => {
                 role: primaryRole, // Mantener compatibilidad
                 id: userId 
             };
-            
-            console.log('🔍 DEBUG - Setting user data:', userData);
+
             setUser(userData);
         }
     }, []);

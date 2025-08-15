@@ -95,7 +95,7 @@ const AdminCategories = () => {
           titulo: task.name,
           descripcion: task.description,
           categoria: task.categoryId,
-          responsable: task.assignedUserName || "Sin asignar",
+          responsable: task.userName || "Sin asignar",
           estatus: task.status ? "activo" : "inactivo",
           proyecto: task.projectId,
           usuario: task.assignedUserId
