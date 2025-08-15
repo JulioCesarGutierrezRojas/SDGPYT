@@ -73,7 +73,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/audit/**").hasAuthority("ROOT") // Audit logs
                         
                         // PROJECT_ADMIN and ROOT - Project management
-                        .requestMatchers(HttpMethod.POST, "/api/projects/create").hasAnyAuthority("ROOT", "PROJECT_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/projects/create").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
                         .requestMatchers(HttpMethod.PUT, "/api/projects/update").hasAnyAuthority("ROOT", "PROJECT_ADMIN")
                         .requestMatchers("/api/projects/send-invitations").hasAnyAuthority("ROOT", "PROJECT_ADMIN")
                         

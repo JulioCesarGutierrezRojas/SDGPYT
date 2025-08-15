@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,24 @@ public class ProjectService {
     private final IProjectUserRepository iProjectUserRepository;
     private final IPendingInvitationRepository pendingInvitationRepository;
     private final EmailService emailService;
+    
+    /**
+     * Método helper para verificar si el usuario actual tiene rol ROOT
+     */
+    private boolean currentUserIsRoot() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getAuthorities() != null) {
+                return authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .anyMatch(authority -> "ROOT".equals(authority));
+            }
+        } catch (Exception e) {
+            // En caso de error, asumir que no es ROOT
+            return false;
+        }
+        return false;
+    }
 
     @Transactional(readOnly = true)
     public ResponseEntity<Object> getAllProjects() {
@@ -102,6 +121,10 @@ public class ProjectService {
 
         projectRepository.save(project);
 
+        // Obtener información del usuario actual
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication != null ? authentication.getName() : null;
+        
         // Si se especificó un administrador, asignarlo al proyecto
         if (dto.getAdminUserId() != null) {
             User adminUser = userRepository.findById(dto.getAdminUserId()).orElse(null);
@@ -117,6 +140,26 @@ public class ProjectService {
                     projectUser.setUserId(adminUser);
                     projectUser.setRole(Role.PROJECT_ADMIN); // Asignar rol de administrador
                     iProjectUserRepository.save(projectUser);
+                }
+            }
+        } else {
+            // Si no se especificó administrador y el usuario actual no es ROOT,
+            // asignar al usuario actual como PROJECT_ADMIN
+            if (!currentUserIsRoot() && currentUsername != null) {
+                User currentUser = userRepository.findByEmail(currentUsername).orElse(null);
+                if (currentUser != null) {
+                    // Verificar si ya existe una relación ProjectUser para este usuario y proyecto
+                    ProjectUser existingProjectUser = iProjectUserRepository
+                        .findByProjectIdAndUserId(project, currentUser)
+                        .orElse(null);
+                    
+                    if (existingProjectUser == null) {
+                        ProjectUser projectUser = new ProjectUser();
+                        projectUser.setProjectId(project);
+                        projectUser.setUserId(currentUser);
+                        projectUser.setRole(Role.PROJECT_ADMIN); // Asignar como administrador del proyecto
+                        iProjectUserRepository.save(projectUser);
+                    }
                 }
             }
         }
