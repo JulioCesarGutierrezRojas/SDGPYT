@@ -22,7 +22,7 @@ export const getAllUsers = async () => {
  */
 export const getUserById = async (id) => {
     try {
-        const response = await handleRequest('get', '/users/', { id });
+        const response = await handleRequest('post', '/users/byId', { id });
 
         if (response.type !== 'SUCCESS') {
             throw new Error(response.text);
