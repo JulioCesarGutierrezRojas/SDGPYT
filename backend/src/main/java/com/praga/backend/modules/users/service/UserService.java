@@ -133,7 +133,15 @@ public class UserService {
         foundUser.setLastname(dto.getLastname());
         foundUser.setEmail(dto.getEmail());
         foundUser.setPhoneNumber(dto.getPhoneNumber());
-        foundUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+        
+        // Solo actualizar contraseña si realmente cambió
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            // Verificar si la nueva contraseña es diferente a la actual
+            if (!passwordEncoder.matches(dto.getPassword(), foundUser.getPassword())) {
+                foundUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+            }
+            // Si la contraseña coincide con la actual, no hacer nada
+        }
 
         userRepository.save(foundUser);
 

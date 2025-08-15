@@ -20,7 +20,10 @@ import { getAllUsers } from "../../admin/adapters/user.controller";
 import { sendProjectInvitations } from "../adapters/invitation.controller";
 
 const AdminCategories = () => {
+  console.log('🚀 ADMIN CATEGORIES - Component rendering started');
+  
   const { proyectoId } = useParams();
+  console.log('🚀 ADMIN CATEGORIES - proyectoId:', proyectoId);
   
   // Obtener información del usuario actual
   const getCurrentUser = () => {
@@ -34,7 +37,7 @@ const AdminCategories = () => {
       
       return { name: userString };
     } catch (error) {
-      console.warn('Error al parsear usuario del localStorage:', error);
+      console.error('Error al parsear usuario del localStorage:', error);
       return {};
     }
   };
@@ -66,7 +69,21 @@ const AdminCategories = () => {
 
   // Cargar datos iniciales
   useEffect(() => {
-    loadInitialData();
+    console.log('🔍 DEBUG - useEffect triggered with proyectoId:', proyectoId);
+    
+    const loadData = async () => {
+      try {
+        await loadInitialData();
+      } catch (error) {
+        console.error('❌ ERROR - useEffect loadInitialData failed:', error);
+        // Check if this error is causing a redirect
+        if (error.name === 'ChunkLoadError' || error.message?.includes('Loading chunk')) {
+          console.error('❌ CHUNK LOAD ERROR detected - this might cause page redirect');
+        }
+      }
+    };
+    
+    loadData();
   }, [proyectoId]);
 
   useEffect(() => {
@@ -75,20 +92,24 @@ const AdminCategories = () => {
 
   const loadInitialData = async () => {
     try {
+      console.log('🔍 DEBUG - loadInitialData: Starting...');
       setLoading(true);
+      console.log('🔍 DEBUG - loadInitialData: Loading promise all...');
       await Promise.all([
         loadCategorias(),
         loadTareas(),
-        loadUsuarios(),
         loadProjectName()
       ]);
+      console.log('🔍 DEBUG - loadInitialData: All data loaded successfully');
     } catch (error) {
-      console.error('Error al cargar datos iniciales:', error);
+      console.error('❌ ERROR - loadInitialData failed:', error);
       showErrorToast({
         title: 'Error',
         text: 'No se pudieron cargar los datos del proyecto'
       });
+      throw error; // Re-throw to see if this error is being caught somewhere else
     } finally {
+      console.log('🔍 DEBUG - loadInitialData: Setting loading to false');
       setLoading(false);
     }
   };
@@ -150,24 +171,6 @@ const AdminCategories = () => {
       setTareas([]);
     } finally {
       setLoadingTareas(false);
-    }
-  };
-
-  const loadUsuarios = async () => {
-    try {
-      const response = await getAllUsers();
-      if (response.result && Array.isArray(response.result)) {
-        const mappedUsers = response.result.map(user => ({
-          id: user.userId,
-          nombre: `${user.name} ${user.lastname}`
-        }));
-        setUsuarios(mappedUsers);
-      } else {
-        setUsuarios([]);
-      }
-    } catch (error) {
-      console.error('Error al cargar usuarios:', error);
-      setUsuarios([]);
     }
   };
 
@@ -375,8 +378,22 @@ const AdminCategories = () => {
     }
   };
 
+  // Función para actualizar categoría de tarea sin mostrar toasts (para drag and drop)
+  const updateTaskCategorySilently = async (taskId, newCategoryId) => {
+    try {
+      await updateTaskCategory(taskId, newCategoryId);
+    } catch (error) {
+      console.error('Error al actualizar categoría de tarea:', error);
+      // Mostrar un toast de error si falla
+      showErrorToast({
+        title: 'Error al mover tarea',
+        text: 'No se pudo actualizar la tarea. Recarga la página.'
+      });
+    }
+  };
+
   // Manejo de drag and drop
-  const onDragEnd = (result) => {
+  const onDragEnd = async (result) => {
     const { source, destination } = result;
 
     if (!destination ||
@@ -387,13 +404,20 @@ const AdminCategories = () => {
 
     const tareasFiltradas = tareas.filter(t => t.categoria === source.droppableId);
     const [tareaMovida] = tareasFiltradas.splice(source.index, 1);
-    tareaMovida.categoria = destination.droppableId;
-
+    const nuevaCategoriaId = destination.droppableId;
+    
+    // Actualizar estado local inmediatamente para UX responsiva
+    tareaMovida.categoria = nuevaCategoriaId;
     const nuevasTareas = tareas
       .filter(t => t.id !== tareaMovida.id)
       .concat(tareaMovida);
-
     setTareas(nuevasTareas);
+
+    // Actualizar en base de datos en segundo plano
+    await updateTaskCategorySilently(
+      tareaMovida.id,
+      parseInt(nuevaCategoriaId)
+    );
   };
 
   return (

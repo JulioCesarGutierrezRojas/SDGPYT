@@ -14,14 +14,11 @@ export const login = async (email, password) => {
 
         const { token, id, fullName, roles } = response.result;
         
-        // Extract role strings from the backend format
-        const roleStrings = roles.map(roleObj => roleObj.role);
-        
-        // Guardar información en localStorage
+        // Guardar información en localStorage - roles tal como los devuelve el backend
         localStorage.setItem('token', token);
         localStorage.setItem('user', fullName);
         localStorage.setItem('userId', id);
-        localStorage.setItem('roles', JSON.stringify(roleStrings));
+        localStorage.setItem('roles', JSON.stringify(roles));
 
         return response;
     } catch (error) {

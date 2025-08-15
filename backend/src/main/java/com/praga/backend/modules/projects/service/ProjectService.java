@@ -178,6 +178,31 @@ public class ProjectService {
             );
         }
 
+        // Validar permisos: solo ROOT o PROJECT_ADMIN del proyecto pueden actualizar
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication != null ? authentication.getName() : null;
+        
+        if (!currentUserIsRoot() && currentUsername != null) {
+            User currentUser = userRepository.findByEmail(currentUsername).orElse(null);
+            if (currentUser != null) {
+                ProjectUser userProjectRelation = iProjectUserRepository
+                    .findByProjectIdAndUserId(project, currentUser)
+                    .orElse(null);
+                
+                if (userProjectRelation == null || !userProjectRelation.getRole().equals(Role.PROJECT_ADMIN)) {
+                    return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "No tienes permisos para actualizar este proyecto"),
+                        HttpStatus.FORBIDDEN
+                    );
+                }
+            } else {
+                return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no encontrado"),
+                    HttpStatus.UNAUTHORIZED
+                );
+            }
+        }
+
         if (Objects.isNull(dto.getName()) || dto.getName().trim().isEmpty()) {
             return new ResponseEntity<>(
                     new ApiResponse<>(null, TypesResponse.WARNING, "El nombre del proyecto es obligatorio."),
@@ -195,47 +220,53 @@ public class ProjectService {
         project.setName(dto.getName());
         project.setAbbreviation(dto.getAbbreviation());
         project.setDescription(dto.getDescription());
-        //project.setStatus(dto.getStatus() != null ? dto.getStatus() : project.getStatus());
 
         projectRepository.save(project);
 
-        // Gestionar la asignación del administrador
-        if (dto.getAdminUserId() != null) {
-            User adminUser = userRepository.findById(dto.getAdminUserId()).orElse(null);
-            if (adminUser != null) {
-                // Buscar si ya existe un administrador para este proyecto
-                ProjectUser currentAdmin = iProjectUserRepository
-                    .findByProjectIdAndRole(project, Role.PROJECT_ADMIN)
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
-                
-                // Si ya existe un administrador diferente, actualizar la relación
-                if (currentAdmin != null) {
-                    if (!currentAdmin.getUserId().getUserId().equals(dto.getAdminUserId())) {
-                        // Cambiar el usuario administrador
-                        currentAdmin.setUserId(adminUser);
-                        iProjectUserRepository.save(currentAdmin);
+        // Solo ROOT puede gestionar la asignación del administrador
+        if (currentUserIsRoot()) {
+            // Gestionar la asignación del administrador
+            if (dto.getAdminUserId() != null) {
+                User adminUser = userRepository.findById(dto.getAdminUserId()).orElse(null);
+                if (adminUser != null) {
+                    // Buscar si ya existe un administrador para este proyecto
+                    ProjectUser currentAdmin = iProjectUserRepository
+                        .findByProjectIdAndRole(project, Role.PROJECT_ADMIN)
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+                    
+                    // Si ya existe un administrador diferente, actualizar la relación
+                    if (currentAdmin != null) {
+                        if (!currentAdmin.getUserId().getUserId().equals(dto.getAdminUserId())) {
+                            // Cambiar el usuario administrador
+                            currentAdmin.setUserId(adminUser);
+                            iProjectUserRepository.save(currentAdmin);
+                        }
+                    } else {
+                        // No existe administrador, crear nueva relación
+                        ProjectUser newAdminRelation = new ProjectUser();
+                        newAdminRelation.setProjectId(project);
+                        newAdminRelation.setUserId(adminUser);
+                        newAdminRelation.setRole(Role.PROJECT_ADMIN);
+                        iProjectUserRepository.save(newAdminRelation);
                     }
-                } else {
-                    // No existe administrador, crear nueva relación
-                    ProjectUser newAdminRelation = new ProjectUser();
-                    newAdminRelation.setProjectId(project);
-                    newAdminRelation.setUserId(adminUser);
-                    newAdminRelation.setRole(Role.PROJECT_ADMIN);
-                    iProjectUserRepository.save(newAdminRelation);
                 }
-            }
-        } else {
-            // Si adminUserId es null, eliminar el administrador actual
-            ProjectUser currentAdmin = iProjectUserRepository
-                .findByProjectIdAndRole(project, Role.PROJECT_ADMIN)
-                .stream()
-                .findFirst()
-                .orElse(null);
-            
-            if (currentAdmin != null) {
-                iProjectUserRepository.delete(currentAdmin);
+            } else {
+                // Si adminUserId es null, eliminar el administrador actual (solo para ROOT)
+                List<ProjectUser> adminUsers = iProjectUserRepository
+                    .findByProjectIdAndRole(project, Role.PROJECT_ADMIN);
+                
+                if (!adminUsers.isEmpty()) {
+                    for (ProjectUser adminUser : adminUsers) {
+                        try {
+                            iProjectUserRepository.deleteById(adminUser.getProjectUserId());
+                        } catch (Exception e) {
+                            // Log el error pero no fallar la transacción
+                            e.printStackTrace();
+                        }
+                    }
+                }
             }
         }
 
@@ -354,6 +385,32 @@ public class ProjectService {
             return new ResponseEntity<>(
             new ApiResponse<>(null, TypesResponse.WARNING, "No se encontró el proyecto con ID: " + dto.getId()), HttpStatus.NOT_FOUND);
         }
+        
+        // Validar permisos: solo ROOT o PROJECT_ADMIN del proyecto pueden cambiar el estado
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication != null ? authentication.getName() : null;
+        
+        if (!currentUserIsRoot() && currentUsername != null) {
+            User currentUser = userRepository.findByEmail(currentUsername).orElse(null);
+            if (currentUser != null) {
+                ProjectUser userProjectRelation = iProjectUserRepository
+                    .findByProjectIdAndUserId(project, currentUser)
+                    .orElse(null);
+                
+                if (userProjectRelation == null || !userProjectRelation.getRole().equals(Role.PROJECT_ADMIN)) {
+                    return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "No tienes permisos para cambiar el estado de este proyecto"),
+                        HttpStatus.FORBIDDEN
+                    );
+                }
+            } else {
+                return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no encontrado"),
+                    HttpStatus.UNAUTHORIZED
+                );
+            }
+        }
+        
         project.setStatus(!project.getStatus());
         projectRepository.save(project);
         return new ResponseEntity<>(

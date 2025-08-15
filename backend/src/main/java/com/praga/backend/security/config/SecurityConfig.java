@@ -68,7 +68,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/allUsers").hasAuthority("ROOT")
                         .requestMatchers(HttpMethod.PATCH, "/api/users/").hasAuthority("ROOT") // Change user status
                         .requestMatchers("/api/projects/").hasAuthority("ROOT") // Get all projects
-                        .requestMatchers(HttpMethod.PATCH, "/api/projects/changestatus").hasAuthority("ROOT") // Change project status
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/changestatus").hasAnyAuthority("ROOT", "PROJECT_ADMIN") // Change project status
                         .requestMatchers("/api/projects/assign-admin").hasAuthority("ROOT") // Assign project admin
                         .requestMatchers("/api/audit/**").hasAuthority("ROOT") // Audit logs
                         
