@@ -29,8 +29,11 @@ public class InitialConfig implements CommandLineRunner {
         String adminEmail = "admin@gmail.com";
 
         try {
-            if (!userRepository.existsByEmail(adminEmail)) {
-                User user = new User();
+            User user = userRepository.findByEmail(adminEmail).orElse(null);
+            
+            if (user == null) {
+                // Crear nuevo usuario admin
+                user = new User();
                 user.setName("Administrador");
                 user.setLastname("Root");
                 user.setEmail(adminEmail);
@@ -47,7 +50,12 @@ public class InitialConfig implements CommandLineRunner {
 
                 logger.info("Usuario ROOT creado correctamente");
             } else {
-                logger.info("Usuario ROOT ya existe");
+                logger.info("Usuario ROOT existe, actualizando contraseña...");
+                user.setPassword(passwordEncoder.encode("admin"));
+                user.setAttempts(0);
+                user.setTimeBlocked(null);
+                user.setStatus(true);
+                userRepository.save(user);
             }
         } catch (Exception e) {
             logger.error("Error al crear usuario ROOT: {}", e.getMessage());
