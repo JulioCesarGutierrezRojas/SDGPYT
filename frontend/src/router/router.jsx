@@ -17,22 +17,24 @@ import AdminCategories from "../modules/user/views/AdminCategories.jsx";
 import BitacoraAcciones from "../modules/admin/views/BitacoraAcciones.jsx";
 import JoinProject from "../modules/user/views/JoinProject.jsx";
 import ProjectInvitation from "../components/ProjectInvitation.jsx";
+import ProtectedRoute from "../components/ProtectedRoute";
+import PublicRoute from "../components/PublicRoute";
 
 const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/auth/signin" element={<Login />} />
-        <Route path="/auth/signup" element={<Register />} />
-        <Route path="/forgot-password" element={<PasswordRecoveryForm />} />
-        <Route path="/register" element={<Register />} />
+        {/* Rutas públicas - redirigen al dashboard si el usuario ya está autenticado */}
+        <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/forgot-password" element={<PublicRoute><PasswordRecoveryForm /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         
-        {/* Rutas públicas para invitaciones */}
+        {/* Rutas públicas para invitaciones - no requieren autenticación */}
         <Route path="/project/:id/join" element={<JoinProject />} />
         <Route path="/invitation/:projectId" element={<ProjectInvitation />} />
 
-        <Route path="/admin" element={<AdminLayout />}>
+        {/* Rutas protegidas para admin */}
+        <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="usuarios" replace />} />
           <Route path="usuarios" element={<UserList />} />
           <Route path="registroUsuario" element={<UserRegister />} />
@@ -42,7 +44,8 @@ const AppRouter = () => {
           <Route path="bitacora" element={<BitacoraAcciones />} />
         </Route>
 
-        <Route path="/user" element={<UserLayout />}>
+        {/* Rutas protegidas para user */}
+        <Route path="/user" element={<ProtectedRoute role="user"><UserLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="misProyectos" replace />} />
           <Route path="misProyectos" element={<ProjectsUser />} />
           <Route path="misCategorias/:proyectoId" element={<Categorias />} />
@@ -50,6 +53,8 @@ const AppRouter = () => {
           <Route path="perfil" element={<MyUserProfile />} />
         </Route>
 
+        {/* Catch-all route for 404 errors - redirect to login for non-authenticated users */}
+        <Route path="*" element={<PublicRoute><Login /></PublicRoute>} />
       </Routes>
     </BrowserRouter>
   );

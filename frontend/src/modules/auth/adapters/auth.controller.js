@@ -14,11 +14,14 @@ export const login = async (email, password) => {
 
         const { token, id, fullName, roles } = response.result;
         
+        // Extract role strings from the backend format
+        const roleStrings = roles.map(roleObj => roleObj.role);
+        
         // Guardar información en localStorage
         localStorage.setItem('token', token);
         localStorage.setItem('user', fullName);
         localStorage.setItem('userId', id);
-        localStorage.setItem('roles', JSON.stringify(roles));
+        localStorage.setItem('roles', JSON.stringify(roleStrings));
 
         return response;
     } catch (error) {
@@ -107,9 +110,22 @@ export const resetPassword = async (email, newPassword, confirmPassword) => {
 /**
  * Cerrar sesión
  */
-export const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('roles');
+export const logout = async () => {
+    try {
+        const response = await handleRequest('post', '/auth/logout', {})
+
+        // Nota: No lanzamos error si falla el logout del servidor,
+        // ya que siempre queremos limpiar el estado local
+        if (response.type === 'SUCCESS') {
+            console.log('✅ Token invalidado correctamente en el servidor');
+        } else {
+            console.warn('⚠️ No se pudo invalidar el token en el servidor, pero se procede con el logout local');
+        }
+
+        return response
+    } catch (e) {
+        console.warn('⚠️ Error al comunicarse con el servidor para logout:', e.message);
+        // Retornamos un objeto válido para que continúe el logout local
+        return { type: 'WARNING', text: 'Logout local realizado' };
+    }
 };

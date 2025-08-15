@@ -1,12 +1,12 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { UserRound, FolderKanban, Settings, LogOut, Menu, DatabaseBackup } from "lucide-react";
 import { useState, useEffect } from "react";
-import { logout } from '../../modules/auth/adapters/auth.controller';
-import { showSuccessToast } from '../../kernel/alerts';
 import { getUserById } from '../../modules/admin/adapters/user.controller';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AdminLayout() {
     const navigate = useNavigate();
+    const { logout } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [userInfo, setUserInfo] = useState({ name: 'Administrador', fullName: 'Cargando...' });
     const linkBaseClasses = "flex items-center gap-3 px-3 py-2 rounded-md transition-colors";
@@ -55,21 +55,11 @@ export default function AdminLayout() {
         }
     };
 
-    const handleLogout = () => {
-        // Limpiar localStorage
-        logout();
+    const handleLogout = async () => {
+        // Usar el logout del AuthContext que maneja tanto la limpieza local como la conexión con el backend
+        await logout();
         
-        // Mostrar mensaje de éxito
-        showSuccessToast({
-            title: 'Sesión cerrada',
-            text: 'Has cerrado sesión exitosamente',
-            timer: 2000
-        });
-
-        // Redirigir al login
-        setTimeout(() => {
-            navigate('/');
-        }, 1000);
+        // No necesitamos redirigir manualmente, el AuthContext y PublicRoute lo manejarán
     };
 
     return (
