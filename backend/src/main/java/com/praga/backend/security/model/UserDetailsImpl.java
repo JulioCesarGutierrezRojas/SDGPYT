@@ -34,7 +34,7 @@ public class UserDetailsImpl implements UserDetails {
         return UserDetailsImpl.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
-                .blocked(user.getStatus())
+                .blocked(!user.getStatus())
                 .enabled(user.getStatus())
                 .authorities(authorities)
                 .build();
@@ -62,7 +62,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return blocked;
+        return !blocked;
     }
 
     @Override
