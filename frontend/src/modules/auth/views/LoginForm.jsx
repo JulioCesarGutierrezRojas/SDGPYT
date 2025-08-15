@@ -4,6 +4,7 @@ import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { login } from '../adapters/auth.controller';
 import { showErrorToast, showSuccessToast } from '../../../kernel/alerts';
 import { validateLoginForm } from '../../../kernel/validations';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,7 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,21 +36,29 @@ export default function LoginForm() {
     try {
       const response = await login(email, password);
       
+      // Obtener datos del usuario del response
+      const { id, fullName, roles } = response.result;
+      
+      // Extraer roles como strings desde el formato {role: "ROOT", project: "GLOBAL"}
+      const roleStrings = roles.map(roleObj => roleObj.role);
+      
+      // Establecer usuario en el contexto de autenticación
+      const userData = {
+        id,
+        name: fullName,
+        roles: roleStrings, // Ahora son strings como ["ROOT"]
+        role: roleStrings.length > 0 ? roleStrings[0] : null // Mantener compatibilidad
+      };
+      
+      authLogin(userData);
+      
       showSuccessToast({
         title: 'Inicio de sesión exitoso',
         text: response.text
       });
 
-      const isRootUser = email.toLowerCase() === 'root@gmail.com' || email.toLowerCase() === 'admin@gmail.com';
-      
-      // Redirigir después del toast
-      setTimeout(() => {
-        if (isRootUser) {
-          navigate('/admin');
-        } else {
-          navigate('/user');
-        }
-      }, 2000);
+      // El AuthProvider y PublicRoute se encargarán de la redirección automática
+      // No necesitamos redirigir manualmente aquí
 
     } catch (error) {
       showErrorToast({
