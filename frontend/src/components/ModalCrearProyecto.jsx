@@ -9,8 +9,18 @@ const isUserRoot = () => {
     const rolesString = localStorage.getItem('roles');
     const roles = JSON.parse(rolesString || '[]');
     
-    // Verificar si algún objeto en el array tiene role: "ROOT"
-    const hasRootRole = roles.some(roleObj => roleObj.role === 'ROOT');
+    // Verificar si el array incluye "ROOT" (puede ser string o objeto)
+    const hasRootRole = roles.some(role => {
+      // Si es string, comparar directamente
+      if (typeof role === 'string') {
+        return role === 'ROOT';
+      }
+      // Si es objeto, verificar la propiedad role
+      if (typeof role === 'object' && role.role) {
+        return role.role === 'ROOT';
+      }
+      return false;
+    });
     return hasRootRole;
   } catch (error) {
     console.error('Error al verificar rol ROOT:', error);
