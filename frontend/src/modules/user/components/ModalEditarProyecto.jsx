@@ -6,12 +6,15 @@ export default function ModalEditarProyecto({ proyecto, onClose, onGuardar }) {
         nombre: "",
         abreviacion: "",
         descripcion: "",
-        estatus: "Habilitado",
     });
 
     useEffect(() => {
         if (proyecto) {
-            setProyectoEditado(proyecto);
+            setProyectoEditado({
+                nombre: proyecto.nombre,
+                abreviacion: proyecto.abreviacion,
+                descripcion: proyecto.descripcion
+            });
         }
     }, [proyecto]);
 
@@ -23,7 +26,6 @@ export default function ModalEditarProyecto({ proyecto, onClose, onGuardar }) {
     const handleSubmit = () => {
         if (proyectoEditado.nombre.trim()) {
             onGuardar(proyectoEditado);
-            onClose();
         }
     };
 
@@ -74,19 +76,6 @@ export default function ModalEditarProyecto({ proyecto, onClose, onGuardar }) {
                             rows={3}
                             className="w-full border border-gray-300 rounded px-3 py-2 resize-none focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         />
-                    </div>
-
-                    <div>
-                        <label className="block font-medium text-gray-700 mb-1">Estatus</label>
-                        <select
-                            name="estatus"
-                            value={proyectoEditado.estatus}
-                            onChange={handleChange}
-                            className="w-full border border-gray-300 rounded px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                        >
-                            <option value="Habilitado">Habilitado</option>
-                            <option value="Deshabilitado">Deshabilitado</option>
-                        </select>
                     </div>
                 </div>
 

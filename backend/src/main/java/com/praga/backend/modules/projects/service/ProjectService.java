@@ -9,13 +9,19 @@ import com.praga.backend.modules.projects.controller.dto.UpdateProjectDto;
 import com.praga.backend.modules.projects.controller.dto.ChangeStatusProjectDto;
 import com.praga.backend.modules.projects.controller.dto.GetProjectByIdDto;
 import com.praga.backend.modules.projects.controller.dto.AssignProjectAdminDto;
+import com.praga.backend.modules.projects.controller.dto.SendInvitationsDto;
+import com.praga.backend.modules.projects.controller.dto.AcceptInvitationDto;
+import com.praga.backend.modules.projects.controller.dto.AcceptInvitationGuestDto;
 import com.praga.backend.modules.projects.model.IProjectRepository;
 import com.praga.backend.modules.projects.model.IProjectUserRepository;
+import com.praga.backend.modules.projects.model.IPendingInvitationRepository;
 import com.praga.backend.modules.projects.model.Project;
 import com.praga.backend.modules.projects.model.ProjectUser;
+import com.praga.backend.modules.projects.model.PendingInvitation;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
 import com.praga.backend.modules.users.model.Role;
+import com.praga.backend.kernel.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -38,6 +45,8 @@ public class ProjectService {
     private final IProjectRepository projectRepository;
     private final IUserRepository userRepository;
     private final IProjectUserRepository iProjectUserRepository;
+    private final IPendingInvitationRepository pendingInvitationRepository;
+    private final EmailService emailService;
 
     @Transactional(readOnly = true)
     public ResponseEntity<Object> getAllProjects() {
@@ -350,6 +359,302 @@ public class ProjectService {
                 new ApiResponse<>(null, TypesResponse.SUCCESS, "Administrador asignado al proyecto correctamente"),
                 HttpStatus.OK
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<Object> sendProjectInvitations(SendInvitationsDto dto) {
+        try {
+            // Obtener el usuario actual del contexto de seguridad
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no autenticado"),
+                        HttpStatus.UNAUTHORIZED
+                );
+            }
+
+            String username = authentication.getName();
+            User currentUser = userRepository.findByEmail(username).orElse(null);
+
+            if (Objects.isNull(currentUser)) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Usuario no encontrado"),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            // Verificar que el proyecto existe
+            Project project = projectRepository.findById(dto.getProjectId()).orElse(null);
+            if (Objects.isNull(project)) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "No se encontró el proyecto con ID: " + dto.getProjectId()),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            // Verificar que el usuario actual es administrador del proyecto
+            ProjectUser adminProjectUser = iProjectUserRepository
+                    .findByProjectIdAndUserId(project, currentUser)
+                    .orElse(null);
+
+            if (adminProjectUser == null || !adminProjectUser.getRole().equals(Role.PROJECT_ADMIN)) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "No tienes permisos para enviar invitaciones a este proyecto"),
+                        HttpStatus.FORBIDDEN
+                );
+            }
+
+            // Preparar los datos para el envío de correos
+            String inviterName = currentUser.getName() + " " + currentUser.getLastname();
+            String inviterEmail = currentUser.getEmail();
+            
+            // Enviar las invitaciones por correo
+            boolean emailsSent = emailService.sendProjectInvitations(
+                    dto.getEmails(),
+                    project.getName(),
+                    project.getDescription(),
+                    inviterName,
+                    inviterEmail,
+                    project.getProjectId()
+            );
+
+            if (emailsSent) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.SUCCESS, "Invitaciones enviadas correctamente a " + dto.getEmails().size() + " destinatarios"),
+                        HttpStatus.OK
+                );
+            } else {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.ERROR, "Error al enviar las invitaciones por correo"),
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Error inesperado al enviar invitaciones: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> acceptProjectInvitation(AcceptInvitationDto dto) {
+        try {
+            // Obtener el usuario actual del contexto de seguridad
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.ERROR, "Debes iniciar sesión para aceptar la invitación"),
+                        HttpStatus.UNAUTHORIZED
+                );
+            }
+
+            String username = authentication.getName();
+            if (username == null || username.equals("anonymousUser")) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.ERROR, "Debes iniciar sesión para aceptar la invitación"),
+                        HttpStatus.UNAUTHORIZED
+                );
+            }
+
+            User currentUser = userRepository.findByEmail(username).orElse(null);
+
+            if (Objects.isNull(currentUser)) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "No se encontró tu cuenta de usuario. Regístrate primero."),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            // Verificar que el proyecto existe
+            Project project = projectRepository.findById(dto.getProjectId()).orElse(null);
+            if (Objects.isNull(project)) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "El proyecto no existe o ha sido eliminado"),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            // Verificar que el proyecto esté activo
+            if (!project.getStatus()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Este proyecto no está disponible actualmente"),
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+
+            // Verificar si el usuario ya está en el proyecto
+            ProjectUser existingProjectUser = iProjectUserRepository
+                    .findByProjectIdAndUserId(project, currentUser)
+                    .orElse(null);
+
+            if (existingProjectUser != null) {
+                String roleName = existingProjectUser.getRole() == Role.PROJECT_ADMIN ? "administrador" : "colaborador";
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Ya eres " + roleName + " de este proyecto"),
+                        HttpStatus.CONFLICT
+                );
+            }
+
+            // Crear nueva relación usuario-proyecto con rol USER
+            ProjectUser newProjectUser = new ProjectUser();
+            newProjectUser.setProjectId(project);
+            newProjectUser.setUserId(currentUser);
+            newProjectUser.setRole(Role.USER); // Rol de colaborador normal
+            iProjectUserRepository.save(newProjectUser);
+
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.SUCCESS, "¡Te has unido exitosamente al proyecto \"" + project.getName() + "\"!"),
+                    HttpStatus.OK
+            );
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Error inesperado al aceptar la invitación: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Aceptar invitación como usuario no registrado
+     * Crea una invitación pendiente que se procesará cuando el usuario se registre
+     */
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> acceptProjectInvitationAsGuest(AcceptInvitationGuestDto dto) {
+        try {
+            // Verificar que el proyecto existe
+            Project project = projectRepository.findById(dto.getProjectId()).orElse(null);
+            if (Objects.isNull(project)) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "El proyecto no existe o ha sido eliminado"),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            // Verificar que el proyecto esté activo
+            if (!project.getStatus()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Este proyecto no está disponible actualmente"),
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+
+            // Verificar si el usuario ya está registrado
+            User existingUser = userRepository.findByEmail(dto.getEmail()).orElse(null);
+            if (existingUser != null) {
+                // Si ya está registrado, verificar si ya está en el proyecto
+                ProjectUser existingProjectUser = iProjectUserRepository
+                        .findByProjectIdAndUserId(project, existingUser)
+                        .orElse(null);
+
+                if (existingProjectUser != null) {
+                    String roleName = existingProjectUser.getRole() == Role.PROJECT_ADMIN ? "administrador" : "colaborador";
+                    return new ResponseEntity<>(
+                            new ApiResponse<>(null, TypesResponse.WARNING, "Ya eres " + roleName + " de este proyecto"),
+                            HttpStatus.CONFLICT
+                    );
+                }
+
+                // Si está registrado pero no en el proyecto, agregarlo directamente
+                ProjectUser newProjectUser = new ProjectUser();
+                newProjectUser.setProjectId(project);
+                newProjectUser.setUserId(existingUser);
+                newProjectUser.setRole(Role.USER);
+                iProjectUserRepository.save(newProjectUser);
+
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.SUCCESS, "Te has unido exitosamente al proyecto \"" + project.getName() + "\"! Inicia sesión para continuar."),
+                        HttpStatus.OK
+                );
+            }
+
+            // Verificar si ya existe una invitación pendiente
+            PendingInvitation existingInvitation = pendingInvitationRepository
+                    .findByEmailAndProjectIdAndUsedFalseAndExpiresAtAfter(dto.getEmail(), project, LocalDateTime.now())
+                    .orElse(null);
+
+            if (existingInvitation != null) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Ya tienes una invitación pendiente para este proyecto. Regístrate para unirte."),
+                        HttpStatus.CONFLICT
+                );
+            }
+
+            // Crear nueva invitación pendiente
+            PendingInvitation pendingInvitation = new PendingInvitation();
+            pendingInvitation.setProjectId(project);
+            pendingInvitation.setEmail(dto.getEmail());
+            pendingInvitationRepository.save(pendingInvitation);
+
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.SUCCESS, "Invitación aceptada. Regístrate para unirte al proyecto \"" + project.getName() + "\"."),
+                    HttpStatus.OK
+            );
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Error inesperado al procesar la invitación: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Procesar invitaciones pendientes después del registro de usuario
+     */
+    @Transactional(rollbackFor = {SQLException.class})
+    public void processPendingInvitations(String email) {
+        try {
+            List<PendingInvitation> pendingInvitations = pendingInvitationRepository
+                    .findPendingInvitationsByEmail(email, LocalDateTime.now());
+
+            if (!pendingInvitations.isEmpty()) {
+                User newUser = userRepository.findByEmail(email).orElse(null);
+                if (newUser != null) {
+                    for (PendingInvitation invitation : pendingInvitations) {
+                        // Verificar si el proyecto aún existe y está activo
+                        if (invitation.getProjectId() != null && invitation.getProjectId().getStatus()) {
+                            // Verificar si ya existe relación usuario-proyecto
+                            ProjectUser existingProjectUser = iProjectUserRepository
+                                    .findByProjectIdAndUserId(invitation.getProjectId(), newUser)
+                                    .orElse(null);
+
+                            if (existingProjectUser == null) {
+                                // Crear nueva relación usuario-proyecto
+                                ProjectUser newProjectUser = new ProjectUser();
+                                newProjectUser.setProjectId(invitation.getProjectId());
+                                newProjectUser.setUserId(newUser);
+                                newProjectUser.setRole(Role.USER);
+                                iProjectUserRepository.save(newProjectUser);
+                            }
+                        }
+
+                        // Marcar invitación como usada
+                        invitation.setUsed(true);
+                        pendingInvitationRepository.save(invitation);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Log error but don't fail the registration process
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Limpiar invitaciones expiradas (método utilitario)
+     */
+    @Transactional(rollbackFor = {SQLException.class})
+    public void cleanExpiredInvitations() {
+        try {
+            pendingInvitationRepository.deleteExpiredInvitations(LocalDateTime.now());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

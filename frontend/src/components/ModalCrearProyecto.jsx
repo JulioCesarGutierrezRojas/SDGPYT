@@ -3,6 +3,21 @@ import { useState, useEffect } from "react";
 import { X, Search, User } from "lucide-react";
 import { getAllUsers } from "../modules/admin/adapters/user.controller";
 
+// Función para verificar si el usuario actual es ROOT
+const isUserRoot = () => {
+  try {
+    const rolesString = localStorage.getItem('roles');
+    const roles = JSON.parse(rolesString || '[]');
+    
+    // Verificar si algún objeto en el array tiene role: "ROOT"
+    const hasRootRole = roles.some(roleObj => roleObj.role === 'ROOT');
+    return hasRootRole;
+  } catch (error) {
+    console.error('Error al verificar rol ROOT:', error);
+    return false;
+  }
+};
+
 export default function ModalCrearProyecto({ onClose, onGuardar }) {
   const [nuevoProyecto, setNuevoProyecto] = useState({
     nombre: "",
@@ -10,18 +25,23 @@ export default function ModalCrearProyecto({ onClose, onGuardar }) {
     descripcion: "",
   });
   
-  // Estados para la búsqueda y selección de administrador
+  // Estados para la búsqueda y selección de administrador (solo para ROOT)
   const [usuarios, setUsuarios] = useState([]);
   const [usuariosFiltrados, setUsuariosFiltrados] = useState([]);
   const [busquedaAdmin, setBusquedaAdmin] = useState("");
   const [adminSeleccionado, setAdminSeleccionado] = useState(null);
   const [mostrarBusqueda, setMostrarBusqueda] = useState(false);
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+  
+  // Verificar si el usuario actual es ROOT
+  const userIsRoot = isUserRoot();
 
-  // Cargar usuarios al montar el componente
+  // Cargar usuarios al montar el componente (solo si es ROOT)
   useEffect(() => {
-    loadUsuarios();
-  }, []);
+    if (userIsRoot) {
+      loadUsuarios();
+    }
+  }, [userIsRoot]);
 
   const loadUsuarios = async () => {
     try {
@@ -129,9 +149,10 @@ export default function ModalCrearProyecto({ onClose, onGuardar }) {
             />
           </div>
 
-          {/* Sección de Administrador */}
-          <div>
-            <label className="block font-medium text-gray-700 mb-2">Administrador del Proyecto (Opcional)</label>
+          {/* Sección de Administrador - Solo visible para usuarios ROOT */}
+          {userIsRoot && (
+            <div>
+              <label className="block font-medium text-gray-700 mb-2">Administrador del Proyecto (Opcional)</label>
             
             {adminSeleccionado ? (
               // Usuario seleccionado
@@ -201,10 +222,11 @@ export default function ModalCrearProyecto({ onClose, onGuardar }) {
               </div>
             )}
             
-            <p className="text-xs text-gray-500 mt-1">
-              El administrador tendrá permisos completos sobre este proyecto
-            </p>
-          </div>
+              <p className="text-xs text-gray-500 mt-1">
+                El administrador tendrá permisos completos sobre este proyecto
+              </p>
+            </div>
+          )}
 
         </div>
 
