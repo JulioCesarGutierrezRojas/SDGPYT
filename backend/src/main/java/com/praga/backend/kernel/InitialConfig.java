@@ -51,11 +51,11 @@ public class InitialConfig implements CommandLineRunner {
                 logger.info("Usuario ROOT creado correctamente");
             } else {
                 logger.info("Usuario ROOT existe, actualizando contraseña...");
-                user.setPassword(passwordEncoder.encode("admin"));
+                /*user.setPassword(passwordEncoder.encode("admin"));
                 user.setAttempts(0);
                 user.setTimeBlocked(null);
                 user.setStatus(true);
-                userRepository.save(user);
+                userRepository.save(user);*/
             }
         } catch (Exception e) {
             logger.error("Error al crear usuario ROOT: {}", e.getMessage());

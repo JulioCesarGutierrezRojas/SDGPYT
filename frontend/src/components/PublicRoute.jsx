@@ -3,8 +3,6 @@ import { useAuth } from "../context/AuthContext";
 
 const PublicRoute = ({ children }) => {
     const { user } = useAuth();
-    
-    console.log('🌐 PublicRoute: Current user:', user);
 
     // Función para obtener la ruta del dashboard según el rol
     const getDashboardRoute = (userRoles) => {
@@ -16,9 +14,10 @@ const PublicRoute = ({ children }) => {
             : String(userRoles[0]).toLowerCase();
         
         switch (primaryRole) {
-            case 'admin':
-            case 'root': // Map ROOT role from backend to admin dashboard
+            case 'root': // Only ROOT role goes to admin dashboard
                 return '/admin';
+            case 'admin':
+            case 'project_admin': // PROJECT_ADMIN goes to user dashboard
             case 'user':
                 return '/user';
             default:
@@ -29,7 +28,6 @@ const PublicRoute = ({ children }) => {
     // Si el usuario está autenticado, redirigir a su dashboard
     if (user) {
         const dashboardRoute = getDashboardRoute(user.roles);
-        console.log('🌐 PublicRoute: Redirecting to dashboard:', dashboardRoute);
         return <Navigate to={dashboardRoute} replace />;
     }
 

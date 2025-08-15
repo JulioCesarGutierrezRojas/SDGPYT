@@ -17,9 +17,10 @@ const ProtectedRoute = ({ children, role }) => {
             : String(userRoles[0]).toLowerCase();
         
         switch (primaryRole) {
-            case 'admin':
-            case 'root': // Map ROOT role from backend to admin dashboard
+            case 'root': // Only ROOT role goes to admin dashboard
                 return '/admin';
+            case 'admin':
+            case 'project_admin': // PROJECT_ADMIN goes to user dashboard
             case 'user':
                 return '/user';
             default:
@@ -35,8 +36,13 @@ const ProtectedRoute = ({ children, role }) => {
             const userRoleLower = roleString.toLowerCase();
             const requiredRoleLower = requiredRole.toLowerCase();
             
-            // Handle ROOT role mapping to admin
+            // Handle role mappings - only ROOT can access admin routes
             if (requiredRoleLower === 'admin' && userRoleLower === 'root') {
+                return true;
+            }
+            
+            // Handle role mappings for user routes - PROJECT_ADMIN and USER can access user routes
+            if (requiredRoleLower === 'user' && (userRoleLower === 'project_admin' || userRoleLower === 'user')) {
                 return true;
             }
             

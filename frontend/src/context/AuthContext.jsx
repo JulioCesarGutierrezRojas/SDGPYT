@@ -40,7 +40,6 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = (userData) => {
-        console.log('🔐 AuthContext: Setting user data:', userData);
         setUser(userData);
     };
 
