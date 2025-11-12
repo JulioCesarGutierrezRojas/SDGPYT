@@ -56,4 +56,10 @@ public class UserController {
     public ResponseEntity<Object> getUsersByProject(@Validated @RequestBody GetUsersByProjectDto dto) {
         return userService.getUsersByProject(dto);
     }
+
+    @GetMapping("/me")
+    @Operation(summary = "Obtener perfil personal", description = "Retorna el perfil del usuario autenticado")
+    public ResponseEntity<Object> getPersonalProfile() {
+        return userService.getPersonalProfile();
+    }
 }

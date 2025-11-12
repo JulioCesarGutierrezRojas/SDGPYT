@@ -15,6 +15,8 @@ import com.praga.backend.modules.projects.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -172,6 +174,43 @@ public class UserService {
         
         return new ResponseEntity<>(
                 new ApiResponse<>(users, TypesResponse.SUCCESS, "Usuarios del proyecto obtenidos correctamente"), 
+                HttpStatus.OK
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<Object> getPersonalProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no autenticado"),
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        String userEmail = authentication.getName();
+        Optional<User> optionalUser = userRepository.findByEmail(userEmail);
+
+        if (optionalUser.isEmpty()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no encontrado"),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        User user = optionalUser.get();
+        GetUsersDto userDto = new GetUsersDto(
+                user.getUserId(),
+                user.getName(),
+                user.getLastname(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getStatus()
+        );
+
+        return new ResponseEntity<>(
+                new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Perfil obtenido correctamente"),
                 HttpStatus.OK
         );
     }
