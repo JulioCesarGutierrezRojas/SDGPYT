@@ -90,6 +90,7 @@ public class SecurityConfig {
                         
                         // USER, PROJECT_ADMIN and ROOT - Profile management
                         .requestMatchers("/api/users/byId").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
+                        .requestMatchers("/api/users/me").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER") // Get personal profile
                         .requestMatchers(HttpMethod.PUT, "/api/users/").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
                         
                         // USER, PROJECT_ADMIN and ROOT - View assigned projects

@@ -9,5 +9,10 @@ export const userService = {
   // Obtener todos los usuarios
   async getAllUsers() {
     return await handleRequest('get', '/users/allUsers');
+  },
+
+  // Obtener perfil personal del usuario autenticado
+  async getPersonalProfile() {
+    return await handleRequest('get', '/users/me');
   }
 };
