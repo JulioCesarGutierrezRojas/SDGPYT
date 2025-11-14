@@ -2,6 +2,7 @@ package com.praga.backend.modules.users.controller;
 
 import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
+import com.praga.backend.modules.users.controller.dto.UpdatePersonalProfileDto;
 import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersByProjectDto;
@@ -61,5 +62,11 @@ public class UserController {
     @Operation(summary = "Obtener perfil personal", description = "Retorna el perfil del usuario autenticado")
     public ResponseEntity<Object> getPersonalProfile() {
         return userService.getPersonalProfile();
+    }
+
+    @PutMapping("/me")
+    @Operation(summary = "Actualizar perfil personal", description = "Actualiza el perfil del usuario autenticado")
+    public ResponseEntity<Object> updatePersonalProfile(@Validated @RequestBody UpdatePersonalProfileDto dto) {
+        return userService.updatePersonalProfile(dto);
     }
 }
