@@ -28,6 +28,15 @@ public class UserController {
         return userService.getAllUsers();
     }
 
+    @GetMapping("/list")
+    @Operation(summary = "Obtener listado de usuarios con paginación", description = "Retorna usuarios con paginación y búsqueda")
+    public ResponseEntity<Object> getUsersList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        return userService.getUsersList(page, size, search);
+    }
+
     @PostMapping("/byId")
     @Operation(summary = "Obtener un usuario por ID", description = "Devuelve un usuario específico por su ID")
     public ResponseEntity<Object> getUserById(@Validated @RequestBody GetUserDto dto) {
