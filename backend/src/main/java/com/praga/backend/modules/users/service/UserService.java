@@ -9,6 +9,7 @@ import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersByProjectDto;
+import com.praga.backend.modules.users.controller.dto.UserListResponseDto;
 import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
@@ -287,6 +288,56 @@ public class UserService {
 
         return new ResponseEntity<>(
                 new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Perfil actualizado correctamente"),
+                HttpStatus.OK
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<Object> getUsersList(int page, int size, String search) {
+        List<User> allUsers = userRepository.findAll();
+        List<GetUsersDto> filteredUsers = allUsers
+                .stream()
+                .filter(user -> {
+                    if (search == null || search.trim().isEmpty()) {
+                        return true;
+                    }
+                    String searchLower = search.toLowerCase();
+                    return user.getName().toLowerCase().contains(searchLower) ||
+                           user.getLastname().toLowerCase().contains(searchLower) ||
+                           user.getEmail().toLowerCase().contains(searchLower);
+                })
+                .map(user -> new GetUsersDto(
+                        user.getUserId(),
+                        user.getName(),
+                        user.getLastname(),
+                        user.getEmail(),
+                        user.getPhoneNumber(),
+                        user.getStatus()
+                ))
+                .collect(Collectors.toList());
+
+        int totalElements = filteredUsers.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalElements);
+
+        List<GetUsersDto> pageContent = filteredUsers.subList(
+                Math.min(startIndex, totalElements),
+                endIndex
+        );
+
+        UserListResponseDto response = new UserListResponseDto(
+                pageContent,
+                page,
+                size,
+                totalElements,
+                totalPages,
+                endIndex >= totalElements,  
+                page == 0  
+        );
+
+        return new ResponseEntity<>(
+                new ApiResponse<>(response, TypesResponse.SUCCESS, "Usuarios obtenidos correctamente"),
                 HttpStatus.OK
         );
     }
