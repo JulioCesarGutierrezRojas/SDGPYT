@@ -4,6 +4,7 @@ import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
 import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
+import com.praga.backend.modules.users.controller.dto.UpdatePersonalProfileDto;
 import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersDto;
@@ -211,6 +212,81 @@ public class UserService {
 
         return new ResponseEntity<>(
                 new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Perfil obtenido correctamente"),
+                HttpStatus.OK
+        );
+    }
+
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> updatePersonalProfile(UpdatePersonalProfileDto dto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no autenticado"),
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        String userEmail = authentication.getName();
+        Optional<User> optionalUser = userRepository.findByEmail(userEmail);
+
+        if (optionalUser.isEmpty()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no encontrado"),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        User user = optionalUser.get();
+
+        // Validar email duplicado (excluir el mismo usuario)
+        if (!user.getEmail().equals(dto.getEmail())) {
+            Optional<User> existingUserByEmail = userRepository.findByEmail(dto.getEmail());
+            if (existingUserByEmail.isPresent()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Ese correo ya está en uso"),
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+        }
+
+        // Validar teléfono duplicado (excluir el mismo usuario)
+        if (!user.getPhoneNumber().equals(dto.getPhoneNumber())) {
+            Optional<User> existingUserByPhone = userRepository.findByPhoneNumber(dto.getPhoneNumber());
+            if (existingUserByPhone.isPresent()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Ese número de teléfono ya está en uso"),
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+        }
+
+        // Actualizar datos
+        user.setName(dto.getName());
+        user.setLastname(dto.getLastname());
+        user.setEmail(dto.getEmail());
+        user.setPhoneNumber(dto.getPhoneNumber());
+
+        // Solo actualizar contraseña si se proporciona y es diferente
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+                user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            }
+        }
+
+        userRepository.save(user);
+
+        GetUsersDto userDto = new GetUsersDto(
+                user.getUserId(),
+                user.getName(),
+                user.getLastname(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getStatus()
+        );
+
+        return new ResponseEntity<>(
+                new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Perfil actualizado correctamente"),
                 HttpStatus.OK
         );
     }
