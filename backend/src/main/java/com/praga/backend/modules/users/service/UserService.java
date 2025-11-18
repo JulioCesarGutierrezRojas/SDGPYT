@@ -10,7 +10,6 @@ import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersByProjectDto;
 import com.praga.backend.modules.users.controller.dto.UserListResponseDto;
-import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
 import com.praga.backend.modules.projects.service.ProjectService;
@@ -86,7 +85,15 @@ public class UserService {
         }
         user.setStatus(!user.getStatus());
         userRepository.save(user);
-        return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
+        GetUsersDto userDto = new GetUsersDto(
+                user.getUserId(),
+                user.getName(),
+                user.getLastname(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getStatus()
+        );
+        return new ResponseEntity<>(new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Estado del usuario actualizado correctamente"), HttpStatus.OK);
     }
 
     @Transactional(rollbackFor = {SQLException.class})
