@@ -125,10 +125,25 @@ public class UserService {
     }
 
     public ResponseEntity<Object> updateUser(UpdateUserDto dto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(authentication.getName()).orElse(null);
+        
         User foundUser = userRepository.findById(dto.getId()).orElse(null);
 
         if (Objects.isNull(foundUser))
             return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "No existe el usuario."), HttpStatus.NOT_FOUND);
+
+        // Validar permisos: solo puede editar su propio perfil o ser ROOT/PROJECT_ADMIN para editar a otros
+        boolean isOwnProfile = currentUser != null && currentUser.getUserId().equals(dto.getId());
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROOT") || auth.getAuthority().equals("PROJECT_ADMIN"));
+        
+        if (!isOwnProfile && !isAdmin) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "No tienes permisos para editar este usuario."), 
+                    HttpStatus.FORBIDDEN
+            );
+        }
 
         // Validar email duplicado (excluir el mismo usuario)
         User existingUserByEmail = userRepository.findByEmail(dto.getEmail()).orElse(null);
@@ -156,7 +171,15 @@ public class UserService {
 
         userRepository.save(foundUser);
 
-        return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
+        GetUsersDto userDto = new GetUsersDto(
+                foundUser.getUserId(),
+                foundUser.getName(),
+                foundUser.getLastname(),
+                foundUser.getEmail(),
+                foundUser.getPhoneNumber(),
+                foundUser.getStatus()
+        );
+        return new ResponseEntity<>(new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
     }
 
     @Transactional(readOnly = true)

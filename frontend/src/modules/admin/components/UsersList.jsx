@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getUsersList, changeUserStatus } from "../adapters/user.controller";
 import { showSuccessToast, showErrorToast } from "../../../kernel/toasts";
+import { EditUserModal } from "./EditUserModal";
 import "./users-list.css";
 
 export const UsersListComponent = () => {
@@ -12,6 +13,8 @@ export const UsersListComponent = () => {
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     loadUsers(0, searchQuery);
@@ -73,6 +76,15 @@ export const UsersListComponent = () => {
     } catch (err) {
       showErrorToast("Error al cambiar el estado");
     }
+  };
+
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    loadUsers(currentPage, searchQuery);
   };
 
   const handleNextPage = () => {
@@ -158,17 +170,26 @@ export const UsersListComponent = () => {
                     </span>
                   </td>
                   <td>
-                    <button
-                      onClick={() =>
-                        handleChangeStatus(user.userId, user.status)
-                      }
-                      className={`btn-toggle ${
-                        user.status ? "btn-deactivate" : "btn-activate"
-                      }`}
-                      title={user.status ? "Desactivar" : "Activar"}
-                    >
-                      {user.status ? "⊘ Desactivar" : "✓ Activar"}
-                    </button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() => handleEditUser(user)}
+                        className="btn-edit"
+                        title="Editar usuario"
+                      >
+                        ✎ Editar
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleChangeStatus(user.userId, user.status)
+                        }
+                        className={`btn-toggle ${
+                          user.status ? "btn-deactivate" : "btn-activate"
+                        }`}
+                        title={user.status ? "Desactivar" : "Activar"}
+                      >
+                        {user.status ? "⊘ Desactivar" : "✓ Activar"}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -202,6 +223,15 @@ export const UsersListComponent = () => {
       <div className="total-info">
         <p>Total: {totalElements} usuarios</p>
       </div>
+
+      {selectedUser && (
+        <EditUserModal
+          user={selectedUser}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   );
 };

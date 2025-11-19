@@ -117,3 +117,8 @@ export const getUsersList = async (page = 0, size = 10, search = '') => {
         throw new Error(error.message);
     }
 };
+
+/**
+ * Editar datos de un usuario (alias de updateUser)
+ */
+export const editUser = updateUser;
