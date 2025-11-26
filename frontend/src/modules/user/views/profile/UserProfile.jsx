@@ -31,19 +31,33 @@ const MyUserProfile = () => {
     const loadUserProfile = async () => {
         try {
             setLoading(true);
-            // Obtener el ID del usuario logueado desde localStorage - userId está separado
+
+            // Validar que exista el token de sesión
+            const token = localStorage.getItem('token');
             const userId = localStorage.getItem('userId');
-            
-            if (!userId) {
+
+            if (!token || !userId) {
+                console.error('Sesión inválida - Token o userId no encontrados');
                 showErrorToast({
-                    title: 'Error',
-                    text: 'No se pudo obtener la información del usuario'
+                    title: 'Sesión expirada',
+                    text: 'Por favor, inicia sesión nuevamente'
                 });
+                // Limpiar localStorage completamente
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('roles');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
                 return;
             }
 
+            console.log('Cargando perfil para userId:', userId);
             const response = await getUserById(userId);
+
             if (response.result) {
+                console.log('Perfil cargado exitosamente:', response.result);
                 const userData = {
                     id: response.result.userId,
                     nombre: response.result.name,
@@ -56,12 +70,15 @@ const MyUserProfile = () => {
                 };
                 setUser(userData);
                 setOriginalUser({ ...userData });
+            } else {
+                console.error('No se recibió resultado del servidor:', response);
+                throw new Error('No se pudo obtener los datos del perfil');
             }
         } catch (error) {
             console.error('Error al cargar perfil:', error);
             showErrorToast({
-                title: 'Error',
-                text: 'No se pudo cargar la información del perfil'
+                title: 'Error al cargar perfil',
+                text: error.message || 'No se pudo cargar la información del perfil. Por favor, recarga la página o inicia sesión nuevamente.'
             });
         } finally {
             setLoading(false);
