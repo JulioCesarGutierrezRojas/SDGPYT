@@ -42,17 +42,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = jwtProvider.resolveToken(request);
 
             if (jwt != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                System.out.println("🔍 JWT Token encontrado en la petición");
+
                 if (!jwtProvider.validateToken(jwt)) {
+                    System.out.println("❌ Token inválido (estructura o firma incorrecta)");
                     filterChain.doFilter(request, response);
                      return;
                 }
 
                 if (blacklistService.isBlacklisted(jwt)) {
+                    System.out.println("❌ Token está en la lista negra (sesión cerrada)");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
 
                 username = jwtProvider.extractUsername(jwt);
+                System.out.println("✅ Token válido para usuario: " + username);
+
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                 if (jwtProvider.isTokenValid(jwt, userDetails)) {
@@ -65,7 +71,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new WebAuthenticationDetailsSource().buildDetails(request)
                     );
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("✅ Autenticación exitosa para: " + username);
+                } else {
+                    System.out.println("❌ Token expirado o no válido para el usuario: " + username);
                 }
+            } else if (jwt == null) {
+                System.out.println("⚠️ No se encontró token JWT en la petición a: " + request.getRequestURI());
             }
         } catch (ExpiredJwtException | MalformedJwtException | UnsupportedJwtException e) {
             handlerExceptionResolver.resolveException(request, response, null, e);
