@@ -4,11 +4,12 @@ import com.praga.backend.kernel.ApiResponse;
 import com.praga.backend.kernel.TypesResponse;
 import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
+import com.praga.backend.modules.users.controller.dto.UpdatePersonalProfileDto;
 import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersByProjectDto;
-import com.praga.backend.modules.users.controller.dto.SaveUserDto;
+import com.praga.backend.modules.users.controller.dto.UserListResponseDto;
 import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
 import com.praga.backend.modules.projects.service.ProjectService;
@@ -84,7 +85,15 @@ public class UserService {
         }
         user.setStatus(!user.getStatus());
         userRepository.save(user);
-        return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
+        GetUsersDto userDto = new GetUsersDto(
+                user.getUserId(),
+                user.getName(),
+                user.getLastname(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getStatus()
+        );
+        return new ResponseEntity<>(new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Estado del usuario actualizado correctamente"), HttpStatus.OK);
     }
 
     @Transactional(rollbackFor = {SQLException.class})
@@ -116,10 +125,25 @@ public class UserService {
     }
 
     public ResponseEntity<Object> updateUser(UpdateUserDto dto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(authentication.getName()).orElse(null);
+        
         User foundUser = userRepository.findById(dto.getId()).orElse(null);
 
         if (Objects.isNull(foundUser))
             return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.WARNING, "No existe el usuario."), HttpStatus.NOT_FOUND);
+
+        // Validar permisos: solo puede editar su propio perfil o ser ROOT/PROJECT_ADMIN para editar a otros
+        boolean isOwnProfile = currentUser != null && currentUser.getUserId().equals(dto.getId());
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROOT") || auth.getAuthority().equals("PROJECT_ADMIN"));
+        
+        if (!isOwnProfile && !isAdmin) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.WARNING, "No tienes permisos para editar este usuario."), 
+                    HttpStatus.FORBIDDEN
+            );
+        }
 
         // Validar email duplicado (excluir el mismo usuario)
         User existingUserByEmail = userRepository.findByEmail(dto.getEmail()).orElse(null);
@@ -147,7 +171,15 @@ public class UserService {
 
         userRepository.save(foundUser);
 
-        return new ResponseEntity<>(new ApiResponse<>(null, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
+        GetUsersDto userDto = new GetUsersDto(
+                foundUser.getUserId(),
+                foundUser.getName(),
+                foundUser.getLastname(),
+                foundUser.getEmail(),
+                foundUser.getPhoneNumber(),
+                foundUser.getStatus()
+        );
+        return new ResponseEntity<>(new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Usuario actualizado correctamente"), HttpStatus.OK);
     }
 
     @Transactional(readOnly = true)
@@ -211,6 +243,131 @@ public class UserService {
 
         return new ResponseEntity<>(
                 new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Perfil obtenido correctamente"),
+                HttpStatus.OK
+        );
+    }
+
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> updatePersonalProfile(UpdatePersonalProfileDto dto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no autenticado"),
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        String userEmail = authentication.getName();
+        Optional<User> optionalUser = userRepository.findByEmail(userEmail);
+
+        if (optionalUser.isEmpty()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no encontrado"),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        User user = optionalUser.get();
+
+        // Validar email duplicado (excluir el mismo usuario)
+        if (!user.getEmail().equals(dto.getEmail())) {
+            Optional<User> existingUserByEmail = userRepository.findByEmail(dto.getEmail());
+            if (existingUserByEmail.isPresent()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Ese correo ya está en uso"),
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+        }
+
+        // Validar teléfono duplicado (excluir el mismo usuario)
+        if (!user.getPhoneNumber().equals(dto.getPhoneNumber())) {
+            Optional<User> existingUserByPhone = userRepository.findByPhoneNumber(dto.getPhoneNumber());
+            if (existingUserByPhone.isPresent()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(null, TypesResponse.WARNING, "Ese número de teléfono ya está en uso"),
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+        }
+
+        // Actualizar datos
+        user.setName(dto.getName());
+        user.setLastname(dto.getLastname());
+        user.setEmail(dto.getEmail());
+        user.setPhoneNumber(dto.getPhoneNumber());
+
+        // Solo actualizar contraseña si se proporciona y es diferente
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+                user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            }
+        }
+
+        userRepository.save(user);
+
+        GetUsersDto userDto = new GetUsersDto(
+                user.getUserId(),
+                user.getName(),
+                user.getLastname(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getStatus()
+        );
+
+        return new ResponseEntity<>(
+                new ApiResponse<>(userDto, TypesResponse.SUCCESS, "Perfil actualizado correctamente"),
+                HttpStatus.OK
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<Object> getUsersList(int page, int size, String search) {
+        List<User> allUsers = userRepository.findAll();
+        List<GetUsersDto> filteredUsers = allUsers
+                .stream()
+                .filter(user -> {
+                    if (search == null || search.trim().isEmpty()) {
+                        return true;
+                    }
+                    String searchLower = search.toLowerCase();
+                    return user.getName().toLowerCase().contains(searchLower) ||
+                           user.getLastname().toLowerCase().contains(searchLower) ||
+                           user.getEmail().toLowerCase().contains(searchLower);
+                })
+                .map(user -> new GetUsersDto(
+                        user.getUserId(),
+                        user.getName(),
+                        user.getLastname(),
+                        user.getEmail(),
+                        user.getPhoneNumber(),
+                        user.getStatus()
+                ))
+                .collect(Collectors.toList());
+
+        int totalElements = filteredUsers.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalElements);
+
+        List<GetUsersDto> pageContent = filteredUsers.subList(
+                Math.min(startIndex, totalElements),
+                endIndex
+        );
+
+        UserListResponseDto response = new UserListResponseDto(
+                pageContent,
+                page,
+                size,
+                totalElements,
+                totalPages,
+                endIndex >= totalElements,  
+                page == 0  
+        );
+
+        return new ResponseEntity<>(
+                new ApiResponse<>(response, TypesResponse.SUCCESS, "Usuarios obtenidos correctamente"),
                 HttpStatus.OK
         );
     }

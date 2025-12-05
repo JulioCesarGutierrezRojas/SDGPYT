@@ -2,6 +2,7 @@ package com.praga.backend.modules.users.controller;
 
 import com.praga.backend.modules.users.controller.dto.SaveUserDto;
 import com.praga.backend.modules.users.controller.dto.UpdateUserDto;
+import com.praga.backend.modules.users.controller.dto.UpdatePersonalProfileDto;
 import com.praga.backend.modules.users.controller.dto.ChangeStatusUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUserDto;
 import com.praga.backend.modules.users.controller.dto.GetUsersByProjectDto;
@@ -25,6 +26,15 @@ public class UserController {
     @Operation(summary = "Obtener todos los usuarios", description = "Lista todos los usuarios del sistema")
     public ResponseEntity<Object> getAllUsers() {
         return userService.getAllUsers();
+    }
+
+    @GetMapping("/list")
+    @Operation(summary = "Obtener listado de usuarios con paginación", description = "Retorna usuarios con paginación y búsqueda")
+    public ResponseEntity<Object> getUsersList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        return userService.getUsersList(page, size, search);
     }
 
     @PostMapping("/byId")
@@ -61,5 +71,11 @@ public class UserController {
     @Operation(summary = "Obtener perfil personal", description = "Retorna el perfil del usuario autenticado")
     public ResponseEntity<Object> getPersonalProfile() {
         return userService.getPersonalProfile();
+    }
+
+    @PutMapping("/me")
+    @Operation(summary = "Actualizar perfil personal", description = "Actualiza el perfil del usuario autenticado")
+    public ResponseEntity<Object> updatePersonalProfile(@Validated @RequestBody UpdatePersonalProfileDto dto) {
+        return userService.updatePersonalProfile(dto);
     }
 }

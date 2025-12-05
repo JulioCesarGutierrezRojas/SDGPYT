@@ -97,3 +97,28 @@ export const changeUserStatus = async (id) => {
         throw new Error(error.message);
     }
 };
+
+
+export const getUsersList = async (page = 0, size = 10, search = '') => {
+    try {
+        let endpoint = `/users/list?page=${page}&size=${size}`;
+        if (search && search.trim() !== '') {
+            endpoint += `&search=${encodeURIComponent(search)}`;
+        }
+
+        const response = await handleRequest('get', endpoint);
+
+        if (response.type !== 'SUCCESS') {
+            throw new Error(response.text);
+        }
+
+        return response;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+/**
+ * Editar datos de un usuario (alias de updateUser)
+ */
+export const editUser = updateUser;
