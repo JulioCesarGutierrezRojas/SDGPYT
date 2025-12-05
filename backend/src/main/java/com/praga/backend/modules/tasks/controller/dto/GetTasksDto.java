@@ -12,6 +12,8 @@ public class GetTasksDto {
     private String name;
     private String description;
     private Boolean status;
+    private String photo;
+    private String location;
     private String categoryName;
     private Long categoryId;
     private String projectName;

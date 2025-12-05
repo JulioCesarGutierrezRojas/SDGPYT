@@ -28,6 +28,12 @@ public class Task extends Auditable {
     @Column(name = "status", columnDefinition = "BOOLEAN DEFAULT true", nullable = false)
     private Boolean status;
 
+    @Column(name = "photo", columnDefinition = "TEXT")
+    private String photo;
+
+    @Column(name = "location", columnDefinition = "TEXT")
+    private String location;
+
     @ManyToOne
     private Category category;
 

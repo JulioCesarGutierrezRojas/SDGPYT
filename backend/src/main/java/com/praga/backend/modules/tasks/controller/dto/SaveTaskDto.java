@@ -17,9 +17,13 @@ public class SaveTaskDto {
     
     @Size(max = 1000, message = "La descripción no puede tener más de 1000 caracteres")
     private String description;
-    
+
     private Boolean status;
-    
+
+    private String photo;
+
+    private String location;
+
     @NotNull(message = "La categoría es obligatoria")
     private Long categoryId;
     

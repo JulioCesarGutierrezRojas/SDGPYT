@@ -111,6 +111,8 @@ public class TaskService {
         task.setName(dto.getName().trim());
         task.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
         task.setStatus(dto.getStatus() != null ? dto.getStatus() : true);
+        task.setPhoto(dto.getPhoto());
+        task.setLocation(dto.getLocation());
         task.setCategory(category);
         task.setProject(project);
         task.setUser(user);
@@ -262,6 +264,8 @@ public class TaskService {
         // Actualizar los campos
         task.setName(dto.getName().trim());
         task.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
+        task.setPhoto(dto.getPhoto());
+        task.setLocation(dto.getLocation());
         task.setCategory(category);
         task.setUser(user);
         
@@ -358,6 +362,8 @@ public class TaskService {
                 task.getName(),
                 task.getDescription(),
                 task.getStatus(),
+                task.getPhoto(),
+                task.getLocation(),
                 task.getCategory() != null ? task.getCategory().getName() : null,
                 task.getCategory() != null ? task.getCategory().getCategoryId() : null,
                 task.getProject() != null ? task.getProject().getName() : null,
