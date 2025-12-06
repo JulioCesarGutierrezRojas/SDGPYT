@@ -32,10 +32,16 @@ pipeline {
         EMAIL_PASSWORD = credentials('email-password')
     }
 
+    options {
+        // Limpiar workspace antes de cada build para evitar problemas de cache
+        skipDefaultCheckout(true)
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                echo 'Clonando repositorio...'
+                echo 'Limpiando workspace y clonando repositorio...'
+                cleanWs()
                 checkout scm
             }
         }
@@ -188,9 +194,6 @@ pipeline {
                     '
                 """
             }
-        }
-        always {
-            cleanWs() // Limpiar workspace
         }
     }
 }
