@@ -15,7 +15,7 @@ pipeline {
         // Variables de la aplicación
         APP_NAME = 'sdgpyt-backend'
         JAR_NAME = 'backend-0.0.1-SNAPSHOT.jar'
-        DEPLOY_DIR = '/home/ec2-user/sdgpyt'
+        DEPLOY_DIR = '~/sdgpyt'
 
         // Variables de base de datos (usar credentials en Jenkins)
         DB_HOST = credentials('db-host')

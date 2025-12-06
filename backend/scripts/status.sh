@@ -4,7 +4,9 @@
 
 # Variables
 APP_NAME="sdgpyt-backend"
-DEPLOY_DIR="/home/ec2-user/sdgpyt"
+# Detectar directorio automáticamente
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEPLOY_DIR="${SCRIPT_DIR}"
 PID_FILE="${DEPLOY_DIR}/${APP_NAME}.pid"
 LOG_FILE="${DEPLOY_DIR}/logs/application.log"
 
