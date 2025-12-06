@@ -162,12 +162,9 @@ pipeline {
                     echo 'Verificando que la aplicación esté funcionando...'
                     sleep(time: 30, unit: 'SECONDS') // Esperar 30 segundos para que inicie
 
-                    // Verificar health endpoint
-                    sh """
-                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST} '
-                            curl -f http://localhost:8080/actuator/health || exit 1
-                        '
-                    """
+                    // Verificar health endpoint usando localhost hardcodeado
+                    def sshCmd = "ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST}"
+                    sh "${sshCmd} 'curl -f http://localhost:8080/actuator/health || exit 1'"
                 }
             }
         }
