@@ -22,6 +22,7 @@ import com.praga.backend.modules.users.model.IUserRepository;
 import com.praga.backend.modules.users.model.User;
 import com.praga.backend.modules.users.model.Role;
 import com.praga.backend.kernel.EmailService;
+import com.praga.backend.modules.notifications.service.FirebaseNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +49,7 @@ public class ProjectService {
     private final IProjectUserRepository iProjectUserRepository;
     private final IPendingInvitationRepository pendingInvitationRepository;
     private final EmailService emailService;
+    private final FirebaseNotificationService notificationService;
     
     /**
      * Método helper para verificar si el usuario actual tiene rol ROOT
@@ -455,6 +457,13 @@ public class ProjectService {
             iProjectUserRepository.save(projectUser);
         }
 
+        // Enviar notificación push al usuario asignado
+        try {
+            notificationService.sendProjectAssignedNotification(adminUser, project.getName());
+        } catch (Exception e) {
+            System.err.println("Error al enviar notificación: " + e.getMessage());
+        }
+
         return new ResponseEntity<>(
                 new ApiResponse<>(null, TypesResponse.SUCCESS, "Administrador asignado al proyecto correctamente"),
                 HttpStatus.OK
@@ -508,7 +517,7 @@ public class ProjectService {
             // Preparar los datos para el envío de correos
             String inviterName = currentUser.getName() + " " + currentUser.getLastname();
             String inviterEmail = currentUser.getEmail();
-            
+
             // Enviar las invitaciones por correo
             boolean emailsSent = emailService.sendProjectInvitations(
                     dto.getEmails(),

@@ -371,4 +371,35 @@ public class UserService {
                 HttpStatus.OK
         );
     }
+
+    @Transactional(rollbackFor = {SQLException.class})
+    public ResponseEntity<Object> updateFcmToken(String fcmToken) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no autenticado"),
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        String userEmail = authentication.getName();
+        Optional<User> optionalUser = userRepository.findByEmail(userEmail);
+
+        if (optionalUser.isEmpty()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>(null, TypesResponse.ERROR, "Usuario no encontrado"),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        User user = optionalUser.get();
+        user.setFcmToken(fcmToken);
+        userRepository.save(user);
+
+        return new ResponseEntity<>(
+                new ApiResponse<>(null, TypesResponse.SUCCESS, "Token FCM actualizado correctamente"),
+                HttpStatus.OK
+        );
+    }
 }

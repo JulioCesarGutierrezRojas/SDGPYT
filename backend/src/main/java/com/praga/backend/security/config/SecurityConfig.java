@@ -67,6 +67,7 @@ public class SecurityConfig {
                         // ROOT ONLY - Full system administration
                         .requestMatchers("/api/users/allUsers").hasAuthority("ROOT")
                         .requestMatchers(HttpMethod.PATCH, "/api/users/").hasAuthority("ROOT") // Change user status
+                        .requestMatchers("/api/projects/send-invitations").hasAuthority("PROJECT_ADMIN")
                         .requestMatchers("/api/projects/").hasAuthority("ROOT") // Get all projects
                         .requestMatchers(HttpMethod.PATCH, "/api/projects/changestatus").hasAnyAuthority("ROOT", "PROJECT_ADMIN") // Change project status
                         .requestMatchers("/api/projects/assign-admin").hasAuthority("ROOT") // Assign project admin
@@ -75,7 +76,6 @@ public class SecurityConfig {
                         // PROJECT_ADMIN and ROOT - Project management
                         .requestMatchers(HttpMethod.POST, "/api/projects/create").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
                         .requestMatchers(HttpMethod.PUT, "/api/projects/update").hasAnyAuthority("ROOT", "PROJECT_ADMIN")
-                        .requestMatchers("/api/projects/send-invitations").hasAnyAuthority("ROOT", "PROJECT_ADMIN")
                         
                         // PROJECT_ADMIN and ROOT - Full category CRUD
                         .requestMatchers(HttpMethod.POST, "/api/categories/").hasAnyAuthority("ROOT", "PROJECT_ADMIN")

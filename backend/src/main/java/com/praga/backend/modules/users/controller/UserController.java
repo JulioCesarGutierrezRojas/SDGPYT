@@ -78,4 +78,11 @@ public class UserController {
     public ResponseEntity<Object> updatePersonalProfile(@Validated @RequestBody UpdatePersonalProfileDto dto) {
         return userService.updatePersonalProfile(dto);
     }
+
+    @PatchMapping("/fcm-token")
+    @Operation(summary = "Actualizar token FCM", description = "Actualiza el token de Firebase Cloud Messaging del usuario autenticado")
+    public ResponseEntity<Object> updateFcmToken(@RequestBody java.util.Map<String, String> payload) {
+        String fcmToken = payload.get("fcmToken");
+        return userService.updateFcmToken(fcmToken);
+    }
 }

@@ -54,6 +54,9 @@ public class User extends Auditable {
     @Column(name = "status", columnDefinition = "BOOLEAN DEFAULT true", nullable = false)
     private Boolean status;
 
+    @Column(name = "fcm_token", columnDefinition = "VARCHAR(255)")
+    private String fcmToken;
+
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private List<Task> tasks;

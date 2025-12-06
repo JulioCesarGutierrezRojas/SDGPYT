@@ -33,11 +33,12 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class TaskService {
-    
+
     private final ITaskRepository taskRepository;
     private final ICategoryRepository categoryRepository;
     private final IProjectRepository projectRepository;
     private final IUserRepository userRepository;
+    private final com.praga.backend.modules.notifications.service.FirebaseNotificationService notificationService;
     
     @Transactional(rollbackFor = {SQLException.class})
     public ResponseEntity<Object> saveTask(SaveTaskDto dto) {
@@ -116,9 +117,17 @@ public class TaskService {
         task.setCategory(category);
         task.setProject(project);
         task.setUser(user);
-        
+
         taskRepository.save(task);
-        
+
+        // Enviar notificación push al usuario asignado
+        try {
+            notificationService.sendTaskAssignedNotification(user, task.getName(), project.getName());
+        } catch (Exception e) {
+            // Log del error pero no fallar la operación
+            System.err.println("Error al enviar notificación: " + e.getMessage());
+        }
+
         return new ResponseEntity<>(
                 new ApiResponse<>(null, TypesResponse.SUCCESS, "Tarea creada correctamente en el proyecto '" + project.getName() + "'."),
                 HttpStatus.OK
@@ -261,6 +270,9 @@ public class TaskService {
             );
         }
         
+        // Guardar usuario anterior para comparar
+        User previousUser = task.getUser();
+
         // Actualizar los campos
         task.setName(dto.getName().trim());
         task.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
@@ -268,9 +280,22 @@ public class TaskService {
         task.setLocation(dto.getLocation());
         task.setCategory(category);
         task.setUser(user);
-        
+
         taskRepository.save(task);
-        
+
+        // Enviar notificación si cambió el usuario asignado
+        try {
+            if (!previousUser.getUserId().equals(user.getUserId())) {
+                // Tarea reasignada a otro usuario
+                notificationService.sendTaskAssignedNotification(user, task.getName(), task.getProject().getName());
+            } else {
+                // Tarea actualizada para el mismo usuario
+                notificationService.sendTaskUpdatedNotification(user, task.getName());
+            }
+        } catch (Exception e) {
+            System.err.println("Error al enviar notificación: " + e.getMessage());
+        }
+
         return new ResponseEntity<>(
                 new ApiResponse<>(null, TypesResponse.SUCCESS, "Tarea actualizada correctamente."),
                 HttpStatus.OK
