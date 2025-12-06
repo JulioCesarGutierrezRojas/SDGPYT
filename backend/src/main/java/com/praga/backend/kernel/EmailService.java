@@ -14,7 +14,6 @@ import jakarta.mail.internet.MimeMessage;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -25,7 +24,7 @@ import java.util.Enumeration;
 public class EmailService {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
-    
+
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
 
@@ -34,27 +33,17 @@ public class EmailService {
      */
     private String getLocalIpAddress() {
         try {
-            // Iterar sobre todas las interfaces de red
             for (Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces(); interfaces.hasMoreElements();) {
                 NetworkInterface networkInterface = interfaces.nextElement();
-                
-                // Saltar interfaces que están deshabilitadas o son loopback
                 if (networkInterface.isLoopback() || !networkInterface.isUp()) {
                     continue;
                 }
-                
-                // Iterar sobre todas las direcciones IP de la interfaz
                 for (Enumeration<InetAddress> addresses = networkInterface.getInetAddresses(); addresses.hasMoreElements();) {
                     InetAddress address = addresses.nextElement();
-                    
-                    // Buscar direcciones IPv4 que no sean loopback
                     if (!address.isLoopbackAddress() && address.getHostAddress().indexOf(':') == -1) {
                         String ipAddress = address.getHostAddress();
-                        // Preferir direcciones de red privada (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
-                        if (ipAddress.startsWith("192.168.") || 
-                            ipAddress.startsWith("10.") || 
-                            (ipAddress.startsWith("172.") && 
-                             Integer.parseInt(ipAddress.split("\\.")[1]) >= 16 && 
+                        if (ipAddress.startsWith("192.168.") || ipAddress.startsWith("10.") ||
+                            (ipAddress.startsWith("172.") && Integer.parseInt(ipAddress.split("\\.")[1]) >= 16 &&
                              Integer.parseInt(ipAddress.split("\\.")[1]) <= 31)) {
                             logger.info("IP local detectada: {}", ipAddress);
                             return ipAddress;
@@ -62,28 +51,9 @@ public class EmailService {
                     }
                 }
             }
-            
-            // Si no se encuentra una IP de red privada, usar cualquier IPv4 válida
-            for (Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces(); interfaces.hasMoreElements();) {
-                NetworkInterface networkInterface = interfaces.nextElement();
-                if (networkInterface.isLoopback() || !networkInterface.isUp()) {
-                    continue;
-                }
-                for (Enumeration<InetAddress> addresses = networkInterface.getInetAddresses(); addresses.hasMoreElements();) {
-                    InetAddress address = addresses.nextElement();
-                    if (!address.isLoopbackAddress() && address.getHostAddress().indexOf(':') == -1) {
-                        String ipAddress = address.getHostAddress();
-                        logger.info("IP local alternativa detectada: {}", ipAddress);
-                        return ipAddress;
-                    }
-                }
-            }
-            
         } catch (SocketException e) {
             logger.error("Error al obtener la dirección IP local: {}", e.getMessage());
         }
-        
-        // Fallback a localhost si no se puede determinar la IP
         logger.warn("No se pudo determinar la IP local, usando localhost como fallback");
         return "localhost";
     }
@@ -167,66 +137,60 @@ public class EmailService {
     /**
      * Envía invitaciones al proyecto a múltiples destinatarios
      */
-    public boolean sendProjectInvitations(List<String> recipientEmails, String projectName, String projectDescription, 
+    public boolean sendProjectInvitations(List<String> recipientEmails, String projectName, String projectDescription,
                                          String inviterName, String inviterEmail, Long projectId) {
         try {
-            // Obtener la IP local dinámicamente
+            // Obtener la IP local dinámicamente para el enlace HTTP
             String localIp = getLocalIpAddress();
-            
-            // Crear el enlace de invitación usando la IP local
-            String invitationLink = String.format("http://%s:5173/project/%d/join", localIp, projectId);
-            
+
             // Preparar las variables para la plantilla
             Map<String, Object> templateModel = new HashMap<>();
             templateModel.put("projectName", projectName);
             templateModel.put("projectDescription", projectDescription);
             templateModel.put("inviterName", inviterName);
             templateModel.put("inviterEmail", inviterEmail);
-            templateModel.put("invitationLink", invitationLink);
-
-            // Procesar la plantilla
-            Context thymeleafContext = new Context();
-            thymeleafContext.setVariables(templateModel);
-            String htmlBody = templateEngine.process("project-invitation-email", thymeleafContext);
 
             // Enviar correo a cada destinatario
             for (String recipientEmail : recipientEmails) {
                 try {
-                    // Crear enlace personalizado para cada destinatario usando la IP local
-                    String personalizedInvitationLink = String.format("http://%s:5173/invitation/%d?email=%s", localIp, projectId, recipientEmail);
-                    
+                    // Crear enlace HTTP que redirigirá a la app móvil
+                    // Este enlace funciona desde navegadores y clientes de correo
+                    String personalizedInvitationLink = String.format("http://%s:8080/api/v1/invitations/redirect/%d?email=%s",
+                                                                      localIp, projectId, recipientEmail);
+
                     // Actualizar las variables de la plantilla con el enlace personalizado
                     Map<String, Object> personalizedTemplateModel = new HashMap<>(templateModel);
                     personalizedTemplateModel.put("invitationLink", personalizedInvitationLink);
                     personalizedTemplateModel.put("recipientEmail", recipientEmail);
-                    
+
                     // Procesar la plantilla con variables personalizadas
                     Context personalizedThymeleafContext = new Context();
                     personalizedThymeleafContext.setVariables(personalizedTemplateModel);
                     String personalizedHtmlBody = templateEngine.process("project-invitation-email", personalizedThymeleafContext);
-                    
+
                     MimeMessage message = mailSender.createMimeMessage();
                     MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-                    
+
                     helper.setTo(recipientEmail);
                     helper.setSubject("Invitación al Proyecto: " + projectName + " - SDGPYT");
                     helper.setText(personalizedHtmlBody, true);
                     helper.setFrom("noreply@sdgpyt.com", "Sistema SDGPYT");
-                    
+
                     if (inviterEmail != null && !inviterEmail.isEmpty()) {
                         helper.setReplyTo(inviterEmail);
                     }
 
                     // Enviar el correo
                     mailSender.send(message);
-                    logger.info("Invitación al proyecto '{}' enviada exitosamente a: {}", projectName, recipientEmail);
-                    
+                    logger.info("Invitación al proyecto '{}' enviada exitosamente a: {} con Deep Link: {}",
+                                projectName, recipientEmail, personalizedInvitationLink);
+
                 } catch (MessagingException e) {
                     logger.error("Error al enviar invitación a {}: {}", recipientEmail, e.getMessage());
                     // Continúa enviando a los demás destinatarios
                 }
             }
-            
+
             return true;
 
         } catch (Exception e) {

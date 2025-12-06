@@ -57,7 +57,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/").permitAll() // Registration endpoint
                         .requestMatchers("/api/projects/accept-invitation-guest").permitAll() // Guest invitation acceptance
-                        
+                        .requestMatchers("/api/v1/invitations/redirect/**").permitAll() // Deep link redirect page
+
                         // Swagger UI endpoints
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
