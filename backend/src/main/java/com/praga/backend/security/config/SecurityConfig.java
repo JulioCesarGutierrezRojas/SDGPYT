@@ -64,7 +64,11 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/api-docs/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
-                        
+
+                        // Actuator health check endpoint (for monitoring and deployment)
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health/**").permitAll()
+
                         // ROOT ONLY - Full system administration
                         .requestMatchers("/api/users/allUsers").hasAuthority("ROOT")
                         .requestMatchers(HttpMethod.PATCH, "/api/users/").hasAuthority("ROOT") // Change user status

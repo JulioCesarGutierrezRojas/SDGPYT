@@ -8,7 +8,9 @@ set -e # Detener si hay algún error
 # Variables
 APP_NAME="sdgpyt-backend"
 JAR_NAME="backend-0.0.1-SNAPSHOT.jar"
-DEPLOY_DIR="/home/ec2-user/sdgpyt"
+# Detectar directorio automáticamente (directorio donde está el script)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEPLOY_DIR="${SCRIPT_DIR}"
 PID_FILE="${DEPLOY_DIR}/${APP_NAME}.pid"
 LOG_FILE="${DEPLOY_DIR}/logs/application.log"
 

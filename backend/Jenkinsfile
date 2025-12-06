@@ -1,32 +1,23 @@
+// Jenkinsfile para CI/CD de SDGPYT Backend
 pipeline {
     agent any
 
     tools {
-        maven 'Maven-3.9' // Nombre configurado en Jenkins Global Tool Configuration
-        jdk 'JDK-21' // Nombre configurado en Jenkins Global Tool Configuration
+        maven 'Maven-3.9'
+        jdk 'JDK-21'
     }
 
     environment {
-        // Variables de entorno para EC2
-        EC2_HOST = credentials('ec2-host') // IP o DNS de tu EC2
-        EC2_USER = credentials('ec2-user') // Usuario SSH (ej: ec2-user, ubuntu)
-        SSH_KEY = credentials('ec2-ssh-key') // Credencial de tipo SSH Username with private key
-
-        // Variables de la aplicación
+        EC2_HOST = credentials('ec2-host')
+        EC2_USER = credentials('ec2-user')
+        SSH_KEY = credentials('ec2-ssh-key')
         APP_NAME = 'sdgpyt-backend'
         JAR_NAME = 'backend-0.0.1-SNAPSHOT.jar'
-        DEPLOY_DIR = '/home/ec2-user/sdgpyt'
-
-        // Variables de base de datos (usar credentials en Jenkins)
         DB_HOST = credentials('db-host')
         DB_NAME = credentials('db-name')
         DB_USER = credentials('db-user')
         DB_PASSWORD = credentials('db-password')
-
-        // JWT Secret
         JWT_SECRET = credentials('jwt-secret')
-
-        // Email credentials
         EMAIL_USERNAME = credentials('email-username')
         EMAIL_PASSWORD = credentials('email-password')
     }
@@ -42,7 +33,7 @@ pipeline {
         stage('Build') {
             steps {
                 dir('backend') {
-                    echo 'Compilando proyecto con Maven...'
+                    echo 'Compilando con Maven...'
                     sh 'mvn clean compile'
                 }
             }
@@ -51,26 +42,12 @@ pipeline {
         stage('Test') {
             steps {
                 dir('backend') {
-                    echo 'Ejecutando pruebas...'
-                    // Permitir que el build continúe aunque las pruebas fallen
                     script {
                         try {
                             sh 'mvn test'
                         } catch (Exception e) {
-                            echo 'Advertencia: Algunas pruebas fallaron, pero continuamos con el build'
+                            echo 'Tests fallaron, continuando...'
                             currentBuild.result = 'UNSTABLE'
-                        }
-                    }
-                }
-            }
-            post {
-                always {
-                    // Publicar resultados de pruebas
-                    script {
-                        try {
-                            junit '**/target/surefire-reports/*.xml'
-                        } catch (Exception e) {
-                            echo 'No se encontraron reportes de pruebas'
                         }
                     }
                 }
@@ -86,64 +63,46 @@ pipeline {
             }
         }
 
-        stage('Archive Artifacts') {
-            steps {
-                dir('backend') {
-                    echo 'Archivando artefactos...'
-                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-                }
-            }
-        }
-
         stage('Deploy to EC2') {
             steps {
                 script {
                     echo 'Desplegando a EC2...'
 
-                    // Crear directorio de deployment en EC2
+                    // Crear directorios
                     sh """
-                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST} '
-                            mkdir -p ${DEPLOY_DIR}/logs
-                            mkdir -p ${DEPLOY_DIR}/backup
-                        '
+                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST} \
+                            'mkdir -p \\\$HOME/sdgpyt/logs \\\$HOME/sdgpyt/backup'
                     """
 
-                    // Backup del JAR anterior si existe
+                    // Backup del JAR anterior
                     sh """
-                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST} '
-                            if [ -f ${DEPLOY_DIR}/${JAR_NAME} ]; then
-                                cp ${DEPLOY_DIR}/${JAR_NAME} ${DEPLOY_DIR}/backup/${JAR_NAME}.backup.\$(date +%Y%m%d_%H%M%S)
-                            fi
-                        '
+                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST} \
+                            'cd \\\$HOME/sdgpyt && [ -f ${JAR_NAME} ] && cp ${JAR_NAME} backup/${JAR_NAME}.backup || true'
                     """
 
-                    // Copiar JAR a EC2
+                    // Copiar archivos
                     sh """
-                        scp -o StrictHostKeyChecking=no -i ${SSH_KEY} \
+                        scp -o StrictHostKeyChecking=no -i \${SSH_KEY} \
                             backend/target/${JAR_NAME} \
-                            ${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/
+                            \${EC2_USER}@\${EC2_HOST}:\\\$HOME/sdgpyt/
                     """
 
-                    // Copiar archivo de configuración de producción
                     sh """
-                        scp -o StrictHostKeyChecking=no -i ${SSH_KEY} \
+                        scp -o StrictHostKeyChecking=no -i \${SSH_KEY} \
                             backend/src/main/resources/application-prod.properties \
-                            ${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/
+                            \${EC2_USER}@\${EC2_HOST}:\\\$HOME/sdgpyt/
                     """
 
-                    // Copiar script de inicio
                     sh """
-                        scp -o StrictHostKeyChecking=no -i ${SSH_KEY} \
+                        scp -o StrictHostKeyChecking=no -i \${SSH_KEY} \
                             backend/scripts/deploy.sh \
-                            ${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/
+                            \${EC2_USER}@\${EC2_HOST}:\\\$HOME/sdgpyt/
                     """
 
-                    // Hacer ejecutable el script y ejecutarlo
+                    // Ejecutar deployment
                     sh """
-                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST} '
-                            chmod +x ${DEPLOY_DIR}/deploy.sh
-                            ${DEPLOY_DIR}/deploy.sh
-                        '
+                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST} \
+                            'chmod +x \\\$HOME/sdgpyt/deploy.sh && \\\$HOME/sdgpyt/deploy.sh'
                     """
                 }
             }
@@ -152,14 +111,13 @@ pipeline {
         stage('Health Check') {
             steps {
                 script {
-                    echo 'Verificando que la aplicación esté funcionando...'
-                    sleep(time: 30, unit: 'SECONDS') // Esperar 30 segundos para que inicie
+                    echo 'Esperando 30 segundos para que la app inicie...'
+                    sleep(time: 30, unit: 'SECONDS')
 
-                    // Verificar health endpoint
+                    echo 'Verificando health endpoint...'
                     sh """
-                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST} '
-                            curl -f http://localhost:8080/actuator/health || exit 1
-                        '
+                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST} \
+                            'curl -f http://localhost:8080/actuator/health'
                     """
                 }
             }
@@ -168,28 +126,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline ejecutado exitosamente!'
-            // Aquí puedes agregar notificaciones por email, Slack, etc.
+            echo '✅ Pipeline ejecutado exitosamente!'
         }
         failure {
-            echo 'Pipeline falló. Revisa los logs.'
-            // Notificaciones de fallo
-            script {
-                // Rollback automático en caso de fallo
-                sh """
-                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST} '
-                        LATEST_BACKUP=\$(ls -t ${DEPLOY_DIR}/backup/*.backup.* 2>/dev/null | head -1)
-                        if [ -n "\$LATEST_BACKUP" ]; then
-                            echo "Restaurando backup: \$LATEST_BACKUP"
-                            cp \$LATEST_BACKUP ${DEPLOY_DIR}/${JAR_NAME}
-                            ${DEPLOY_DIR}/deploy.sh
-                        fi
-                    '
-                """
-            }
-        }
-        always {
-            cleanWs() // Limpiar workspace
+            echo '❌ Pipeline falló. Revisar logs.'
         }
     }
 }
