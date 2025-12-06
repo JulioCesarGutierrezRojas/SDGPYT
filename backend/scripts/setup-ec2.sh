@@ -73,7 +73,7 @@ echo ""
 
 # Crear directorios de la aplicación
 echo "4. Creando estructura de directorios..."
-DEPLOY_DIR="/home/${USER}/sdgpyt"
+DEPLOY_DIR="${HOME}/sdgpyt"
 mkdir -p ${DEPLOY_DIR}/logs
 mkdir -p ${DEPLOY_DIR}/backup
 chmod 755 ${DEPLOY_DIR}
