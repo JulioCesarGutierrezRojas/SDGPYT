@@ -164,7 +164,7 @@ pipeline {
 
                     // Verificar health endpoint usando localhost hardcodeado
                     def sshCmd = "ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST}"
-                    sh "${sshCmd} 'curl -f http://localhost:8080/actuator/health || exit 1'"
+                    sh "${sshCmd} 'curl -f http://localhost:8081/actuator/health || exit 1'"
                 }
             }
         }
