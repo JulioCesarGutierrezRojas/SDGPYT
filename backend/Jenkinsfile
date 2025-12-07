@@ -1,135 +1,60 @@
-// Jenkinsfile para CI/CD de SDGPYT Backend
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven-3.9'
-        jdk 'JDK-21'
-    }
-
-    environment {
-        EC2_HOST = credentials('ec2-host')
-        EC2_USER = credentials('ec2-user')
-        SSH_KEY = credentials('ec2-ssh-key')
-        APP_NAME = 'sdgpyt-backend'
-        JAR_NAME = 'backend-0.0.1-SNAPSHOT.jar'
-        DB_HOST = credentials('db-host')
-        DB_NAME = credentials('db-name')
-        DB_USER = credentials('db-user')
-        DB_PASSWORD = credentials('db-password')
-        JWT_SECRET = credentials('jwt-secret')
-        EMAIL_USERNAME = credentials('email-username')
-        EMAIL_PASSWORD = credentials('email-password')
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Clone') {
             steps {
-                echo 'Clonando repositorio...'
-                checkout scm
+                git branch: 'develop', url: 'https://github.com/JulioCesarGutierrezRojas/SDGPYT.git'
             }
         }
 
-        stage('Build') {
-            steps {
-                dir('backend') {
-                    echo 'Compilando con Maven...'
-                    sh 'mvn clean compile'
-                }
-            }
-        }
-
-        stage('Test') {
-            steps {
-                dir('backend') {
-                    script {
-                        try {
-                            sh 'mvn test'
-                        } catch (Exception e) {
-                            echo 'Tests fallaron, continuando...'
-                            currentBuild.result = 'UNSTABLE'
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Package') {
-            steps {
-                dir('backend') {
-                    echo 'Empaquetando aplicación...'
-                    sh 'mvn clean package -DskipTests'
-                }
-            }
-        }
-
-        stage('Deploy to EC2') {
+        stage('Stop Services') {
             steps {
                 script {
-                    echo 'Desplegando a EC2...'
-
-                    // Crear directorios
-                    sh """
-                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST} \
-                            'mkdir -p \\\$HOME/sdgpyt/logs \\\$HOME/sdgpyt/backup'
-                    """
-
-                    // Backup del JAR anterior
-                    sh """
-                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST} \
-                            'cd \\\$HOME/sdgpyt && [ -f ${JAR_NAME} ] && cp ${JAR_NAME} backup/${JAR_NAME}.backup || true'
-                    """
-
-                    // Copiar archivos
-                    sh """
-                        scp -o StrictHostKeyChecking=no -i \${SSH_KEY} \
-                            backend/target/${JAR_NAME} \
-                            \${EC2_USER}@\${EC2_HOST}:\\\$HOME/sdgpyt/
-                    """
-
-                    sh """
-                        scp -o StrictHostKeyChecking=no -i \${SSH_KEY} \
-                            backend/src/main/resources/application-prod.properties \
-                            \${EC2_USER}@\${EC2_HOST}:\\\$HOME/sdgpyt/
-                    """
-
-                    sh """
-                        scp -o StrictHostKeyChecking=no -i \${SSH_KEY} \
-                            backend/scripts/deploy.sh \
-                            \${EC2_USER}@\${EC2_HOST}:\\\$HOME/sdgpyt/
-                    """
-
-                    // Ejecutar deployment
-                    sh """
-                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST} \
-                            'chmod +x \\\$HOME/sdgpyt/deploy.sh && \\\$HOME/sdgpyt/deploy.sh'
-                    """
+                    echo 'Deteniendo contenedores...'
+                    sh '''
+                        docker-compose down -v || echo "Compose down falló, intentando docker rm"
+                        docker rm -f sdgpyt-postgres sdgpyt-backend 2>/dev/null || echo "No hay contenedores para eliminar"
+                        exit 0
+                    '''
                 }
             }
         }
 
-        stage('Health Check') {
+        stage('Remove Old Images') {
             steps {
                 script {
-                    echo 'Esperando 30 segundos para que la app inicie...'
-                    sleep(time: 30, unit: 'SECONDS')
-
-                    echo 'Verificando health endpoint...'
-                    sh """
-                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${EC2_USER}@\${EC2_HOST} \
-                            'curl -f http://localhost:8080/actuator/health'
-                    """
+                    echo 'Eliminando imagenes antiguas...'
+                    sh '''
+                        docker images -q backend-backend | xargs -r docker rmi -f || echo "No hay imagenes para eliminar"
+                        exit 0
+                    '''
                 }
+            }
+        }
+
+        stage('Build Docker') {
+            steps {
+                sh 'docker-compose build'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker-compose up -d'
             }
         }
     }
 
     post {
+        always {
+            echo 'Pipeline finalizado.'
+        }
         success {
-            echo '✅ Pipeline ejecutado exitosamente!'
+            echo 'Pipeline ejecutado exitosamente.'
         }
         failure {
-            echo '❌ Pipeline falló. Revisar logs.'
+            echo 'Error al ejecutar el pipeline.'
         }
     }
 }
