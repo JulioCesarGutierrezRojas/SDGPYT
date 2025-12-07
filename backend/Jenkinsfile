@@ -19,7 +19,7 @@ pipeline {
                     echo 'Deteniendo contenedores...'
                     sh '''
                         cd backend
-                        docker-compose down -v || echo "Compose down falló, intentando docker rm"
+                        docker compose down -v || echo "Compose down falló, intentando docker rm"
                         docker rm -f sdgpyt-postgres sdgpyt-backend 2>/dev/null || echo "No hay contenedores para eliminar"
                         exit 0
                     '''
@@ -42,7 +42,7 @@ pipeline {
         stage('Build Docker') {
             steps {
                 dir('backend') {
-                    sh 'docker-compose build'
+                    sh 'docker compose build'
                 }
             }
         }
@@ -50,7 +50,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 dir('backend') {
-                    sh 'docker-compose up -d'
+                    sh 'docker compose up -d'
                 }
             }
         }
