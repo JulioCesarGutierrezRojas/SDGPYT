@@ -51,13 +51,29 @@ pipeline {
             steps {
                 dir('backend') {
                     sh '''
-                        docker compose up -d
-                        echo "Esperando 10 segundos para que los servicios inicien..."
-                        sleep 10
-                        echo "Estado de los contenedores:"
-                        docker compose ps
-                        echo "Logs de postgres:"
-                        docker compose logs postgres || true
+                        # Iniciar solo postgres primero
+                        docker compose up -d postgres
+                        echo "Esperando 15 segundos para PostgreSQL..."
+                        sleep 15
+                        
+                        echo "=== Estado de PostgreSQL ==="
+                        docker compose ps postgres
+                        
+                        echo "=== Logs de PostgreSQL ==="
+                        docker compose logs postgres
+                        
+                        # Verificar si postgres está saludable
+                        if docker compose ps postgres | grep -q "healthy\|Up"; then
+                            echo "PostgreSQL OK, iniciando backend..."
+                            docker compose up -d backend
+                            sleep 10
+                            echo "=== Estado final ==="
+                            docker compose ps
+                        else
+                            echo "ERROR: PostgreSQL no está funcionando"
+                            docker compose logs postgres
+                            exit 1
+                        fi
                     '''
                 }
             }
