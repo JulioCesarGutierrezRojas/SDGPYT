@@ -50,7 +50,15 @@ pipeline {
         stage('Deploy') {
             steps {
                 dir('backend') {
-                    sh 'docker compose up -d'
+                    sh '''
+                        docker compose up -d
+                        echo "Esperando 10 segundos para que los servicios inicien..."
+                        sleep 10
+                        echo "Estado de los contenedores:"
+                        docker compose ps
+                        echo "Logs de postgres:"
+                        docker compose logs postgres || true
+                    '''
                 }
             }
         }
