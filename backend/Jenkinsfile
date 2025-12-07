@@ -63,7 +63,7 @@ pipeline {
                         docker compose logs postgres
                         
                         # Verificar si postgres está saludable
-                        if docker compose ps postgres | grep -q "healthy\|Up"; then
+                        if docker compose ps postgres | grep -E "healthy|Up"; then
                             echo "PostgreSQL OK, iniciando backend..."
                             docker compose up -d backend
                             sleep 10
