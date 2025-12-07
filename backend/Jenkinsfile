@@ -1,10 +1,18 @@
 pipeline {
     agent any
 
+pipeline {
+    agent any
+
     stages {
         stage('Clone') {
             steps {
-                git branch: 'develop', url: 'https://github.com/JulioCesarGutierrezRojas/SDGPYT.git'
+                script {
+                    // Opción con credenciales (recomendado)
+                    git branch: 'develop', 
+                        credentialsId: 'a39a6de8-7ffc-43ab-b3d4-068b6d50a694', 
+                        url: 'https://github.com/JulioCesarGutierrezRojas/SDGPYT.git'
+                }
             }
         }
 
