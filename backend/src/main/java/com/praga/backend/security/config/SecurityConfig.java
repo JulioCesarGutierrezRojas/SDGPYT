@@ -76,6 +76,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/me").authenticated() // Ver perfil propio
                         .requestMatchers(HttpMethod.PUT, "/api/users/me").authenticated() // Actualizar perfil propio
                         .requestMatchers(HttpMethod.PATCH, "/api/users/fcm-token").authenticated() // Actualizar token FCM
+                        .requestMatchers("/api/projects/accept-invitation").authenticated() // Aceptar invitación a proyecto
 
                         // ROOT ONLY - Full system administration
                         .requestMatchers("/api/users/allUsers").hasAuthority("ROOT")
@@ -103,7 +104,6 @@ public class SecurityConfig {
                         // USER, PROJECT_ADMIN and ROOT - Profile and project management
                         .requestMatchers("/api/users/byId").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
                         .requestMatchers("/api/projects/by-id").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
-                        .requestMatchers("/api/projects/accept-invitation").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
                         
                         // USER, PROJECT_ADMIN and ROOT - View project categories
                         .requestMatchers("/api/categories/active").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
