@@ -69,6 +69,14 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
 
+                        // 🔧 FIX: Endpoints que solo requieren autenticación (sin roles específicos)
+                        // Estos endpoints permiten que usuarios nuevos sin proyectos asignados puedan acceder
+                        .requestMatchers("/api/projects/user-projects").authenticated() // Ver proyectos propios (puede ser lista vacía)
+                        .requestMatchers(HttpMethod.POST, "/api/projects/create").authenticated() // Crear proyecto (se convierte en PROJECT_ADMIN)
+                        .requestMatchers("/api/users/me").authenticated() // Ver perfil propio
+                        .requestMatchers(HttpMethod.PUT, "/api/users/me").authenticated() // Actualizar perfil propio
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/fcm-token").authenticated() // Actualizar token FCM
+
                         // ROOT ONLY - Full system administration
                         .requestMatchers("/api/users/allUsers").hasAuthority("ROOT")
                         .requestMatchers(HttpMethod.PATCH, "/api/users/").hasAuthority("ROOT") // Change user status
@@ -79,7 +87,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/audit/**").hasAuthority("ROOT") // Audit logs
                         
                         // PROJECT_ADMIN and ROOT - Project management
-                        .requestMatchers(HttpMethod.POST, "/api/projects/create").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
                         .requestMatchers(HttpMethod.PUT, "/api/projects/update").hasAnyAuthority("ROOT", "PROJECT_ADMIN")
                         
                         // PROJECT_ADMIN and ROOT - Full category CRUD
@@ -93,13 +100,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/tasks/").hasAnyAuthority("ROOT", "PROJECT_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/tasks/**").hasAnyAuthority("ROOT", "PROJECT_ADMIN")
                         
-                        // USER, PROJECT_ADMIN and ROOT - Profile management
+                        // USER, PROJECT_ADMIN and ROOT - Profile and project management
                         .requestMatchers("/api/users/byId").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
-                        .requestMatchers("/api/users/me").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER") // Get personal profile
-                        .requestMatchers(HttpMethod.PUT, "/api/users/").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
-                        
-                        // USER, PROJECT_ADMIN and ROOT - View assigned projects
-                        .requestMatchers("/api/projects/user-projects").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
                         .requestMatchers("/api/projects/by-id").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
                         .requestMatchers("/api/projects/accept-invitation").hasAnyAuthority("ROOT", "PROJECT_ADMIN", "USER")
                         
