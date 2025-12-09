@@ -46,6 +46,8 @@ services:
       EMAIL_PORT: 587
       EMAIL_USERNAME: 20203tn160@utez.edu.mx
       EMAIL_PASSWORD: rksh jrdo pijg rmqv
+
+      BACKEND_URL: http://34.51.118.92:8081
     ports:
       - "8081:8080"
     networks:

@@ -3,6 +3,7 @@ package com.praga.backend.kernel;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,10 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+
+    // 🔧 Inyectar URL del backend desde configuración
+    @Value("${app.backend.url}")
+    private String backendUrl;
 
     /**
      * Obtiene la dirección IP local de la máquina de forma dinámica
@@ -140,8 +145,8 @@ public class EmailService {
     public boolean sendProjectInvitations(List<String> recipientEmails, String projectName, String projectDescription,
                                          String inviterName, String inviterEmail, Long projectId) {
         try {
-            // Obtener la IP local dinámicamente para el enlace HTTP
-            String localIp = getLocalIpAddress();
+            // 🔧 Usar URL del backend configurada (no detectar IP automáticamente)
+            logger.info("🌐 Usando backend URL: {}", backendUrl);
 
             // Preparar las variables para la plantilla
             Map<String, Object> templateModel = new HashMap<>();
@@ -155,8 +160,8 @@ public class EmailService {
                 try {
                     // Crear enlace HTTP que redirigirá a la app móvil
                     // Este enlace funciona desde navegadores y clientes de correo
-                    String personalizedInvitationLink = String.format("http://%s:8080/api/v1/invitations/redirect/%d?email=%s",
-                                                                      localIp, projectId, recipientEmail);
+                    String personalizedInvitationLink = String.format("%s/api/v1/invitations/redirect/%d?email=%s",
+                                                                      backendUrl, projectId, recipientEmail);
 
                     // Actualizar las variables de la plantilla con el enlace personalizado
                     Map<String, Object> personalizedTemplateModel = new HashMap<>(templateModel);
