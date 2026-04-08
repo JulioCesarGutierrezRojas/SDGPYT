@@ -1,5 +1,6 @@
 package com.praga.backend.security.jwt;
 
+import com.praga.backend.modules.auth.service.BlacklistService;
 import com.praga.backend.security.service.UserDetailsServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -28,14 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
     private final UserDetailsServiceImpl userDetailsService;
     private final HandlerExceptionResolver handlerExceptionResolver;
-
-    private String getToken(HttpServletRequest request) {
-        String headers = request.getHeader("Authorization");
-        if (headers != null && headers.startsWith("Bearer")) {
-            return headers.replace("Bearer ", "");
-        }
-        return null;
-    }
+    private final BlacklistService blacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -45,11 +39,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException, UsernameNotFoundException {
         try{
             final String username;
-            String jwt = getToken(request);
+            String jwt = jwtProvider.resolveToken(request);
 
             if (jwt != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                System.out.println("🔍 JWT Token encontrado en la petición");
+
+                if (!jwtProvider.validateToken(jwt)) {
+                    System.out.println("❌ Token inválido (estructura o firma incorrecta)");
+                    filterChain.doFilter(request, response);
+                     return;
+                }
+
+                if (blacklistService.isBlacklisted(jwt)) {
+                    System.out.println("❌ Token está en la lista negra (sesión cerrada)");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
+
                 username = jwtProvider.extractUsername(jwt);
+                System.out.println("✅ Token válido para usuario: " + username);
+
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
                 if (jwtProvider.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
@@ -60,7 +71,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new WebAuthenticationDetailsSource().buildDetails(request)
                     );
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("✅ Autenticación exitosa para: " + username);
+                } else {
+                    System.out.println("❌ Token expirado o no válido para el usuario: " + username);
                 }
+            } else if (jwt == null) {
+                System.out.println("⚠️ No se encontró token JWT en la petición a: " + request.getRequestURI());
             }
         } catch (ExpiredJwtException | MalformedJwtException | UnsupportedJwtException e) {
             handlerExceptionResolver.resolveException(request, response, null, e);

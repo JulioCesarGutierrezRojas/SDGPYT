@@ -1,16 +1,20 @@
 package com.praga.backend.security.jwt;
 
+import com.praga.backend.modules.users.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -32,15 +36,20 @@ public class JwtProvider {
         return claimsResolver.apply(claims);
     }
 
-    /*public String generateToken(UserDetails userDetails, User user) {
+    public String generateToken(UserDetails userDetails, User user){
         return generateToken(new HashMap<>(), userDetails, user);
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, User user) {
-        extraClaims.put("username", user.getUsername());
-        extraClaims.put("roles", user.getRoles());
-        extraClaims.put("fullName", user.getPerson().getName() + " " + user.getPerson().getSurname());
-        extraClaims.put("idUser", user.getId());
+        List<String> roles = user.getProjectUsers()
+                .stream()
+                .map(pu -> pu.getRole().name())
+                .distinct()
+                .toList();
+
+        extraClaims.put("name", user.getName());
+        extraClaims.put("idUser", user.getUserId());
+        extraClaims.put("roles", roles);
         return Jwts
                 .builder()
                 .claims(extraClaims)
@@ -49,7 +58,7 @@ public class JwtProvider {
                 .expiration(new Date(new Date().getTime() + expiration * 1000L))
                 .signWith(getSingKey(), Jwts.SIG.HS256)
                 .compact();
-    }*/
+    }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
@@ -57,7 +66,6 @@ public class JwtProvider {
     }
 
     private boolean isTokenExpired(String token) {
-
         return extractExpiration(token).before(new Date());
     }
 
@@ -77,5 +85,32 @@ public class JwtProvider {
     private SecretKey getSingKey() {
         byte[] secretBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(secretBytes);
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            extractAllClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+
+    public Instant getExpiryFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSingKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return claims.getExpiration().toInstant();
     }
 }

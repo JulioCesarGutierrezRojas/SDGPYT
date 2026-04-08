@@ -1,0 +1,94 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone') {
+            steps {
+                script {
+                    // Opción con credenciales (recomendado)
+                    git branch: 'develop', 
+                        credentialsId: 'a39a6de8-7ffc-43ab-b3d4-068b6d50a694', 
+                        url: 'https://github.com/JulioCesarGutierrezRojas/SDGPYT.git'
+                }
+            }
+        }
+
+        stage('Stop Services') {
+            steps {
+                script {
+                    echo 'Deteniendo contenedores...'
+                    sh '''
+                        cd backend
+                        docker compose down -v || echo "Compose down falló, intentando docker rm"
+                        docker rm -f sdgpyt-postgres sdgpyt-backend 2>/dev/null || echo "No hay contenedores para eliminar"
+                        exit 0
+                    '''
+                }
+            }
+        }
+
+        stage('Remove Old Images') {
+            steps {
+                script {
+                    echo 'Eliminando imagenes antiguas...'
+                    sh '''
+                        docker images -q backend-backend | xargs -r docker rmi -f || echo "No hay imagenes para eliminar"
+                        exit 0
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker') {
+            steps {
+                dir('backend') {
+                    sh 'docker compose build'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        # Iniciar solo postgres primero
+                        docker compose up -d postgres
+                        echo "Esperando 15 segundos para PostgreSQL..."
+                        sleep 15
+                        
+                        echo "=== Estado de PostgreSQL ==="
+                        docker compose ps postgres
+                        
+                        echo "=== Logs de PostgreSQL ==="
+                        docker compose logs postgres
+                        
+                        # Verificar si postgres está saludable
+                        if docker compose ps postgres | grep -E "healthy|Up"; then
+                            echo "PostgreSQL OK, iniciando backend..."
+                            docker compose up -d backend
+                            sleep 10
+                            echo "=== Estado final ==="
+                            docker compose ps
+                        else
+                            echo "ERROR: PostgreSQL no está funcionando"
+                            docker compose logs postgres
+                            exit 1
+                        fi
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finalizado.'
+        }
+        success {
+            echo 'Pipeline ejecutado exitosamente.'
+        }
+        failure {
+            echo 'Error al ejecutar el pipeline.'
+        }
+    }
+}

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   /* Paleta azul personalizada */
   --color-azul-100: #DBF7FF;
   --color-azul-200: #C5F1FE;
@@ -24,4 +24,21 @@
   --color-gris-800: #80828D;
   --color-gris-900: #62636C;
   --color-gris-950: #1E1F24;
+}
+
+.scroll-cyan::-webkit-scrollbar {
+  height: 10px; /* altura de la barra horizontal */
+}
+
+.scroll-cyan::-webkit-scrollbar-track {
+  background: #dce3e4; /* cyan-50 */
+}
+
+.scroll-cyan::-webkit-scrollbar-thumb {
+  background-color: #15bfdd; /* cyan-500 */
+  border-radius: 9999px;
+}
+
+.scroll-cyan::-webkit-scrollbar-thumb:hover {
+  background-color: #1495b6; /* cyan-600 */
 }

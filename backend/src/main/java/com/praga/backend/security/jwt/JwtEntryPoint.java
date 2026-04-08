@@ -22,7 +22,20 @@ public class JwtEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-        logger.error("Error de autenticación");
+        String requestPath = request.getRequestURI();
+        String authHeader = request.getHeader("Authorization");
+
+        logger.error("❌ Error de autenticación");
+        logger.error("   Ruta solicitada: {}", requestPath);
+        logger.error("   Authorization header presente: {}", authHeader != null ? "Sí" : "No");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            logger.error("   Token (primeros 20 caracteres): {}", token.length() > 20 ? token.substring(0, 20) + "..." : token);
+        }
+
+        logger.error("   Detalle del error: {}", authException.getMessage());
+
         handlerExceptionResolver.resolveException(request, response, null, authException);
     }
 }

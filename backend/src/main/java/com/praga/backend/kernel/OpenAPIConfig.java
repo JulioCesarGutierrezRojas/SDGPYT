@@ -16,7 +16,7 @@ import java.util.List;
 
 @Configuration
 public class OpenAPIConfig {
-
+/*
     @Value("${openapi.dev-url}")
     private String devUrl;
 
@@ -46,5 +46,5 @@ public class OpenAPIConfig {
                 .addSecurityItem(new SecurityRequirement().addList("JWT"))
                 .info(info)
                 .servers(List.of(devServer));
-    }
+    }*/
 }

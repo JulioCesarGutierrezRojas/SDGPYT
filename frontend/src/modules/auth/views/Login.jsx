@@ -1,12 +1,13 @@
-import Loader from "../../../components/Loader"
+import LoginForm from "./LoginForm"
+
 
 const Login = () => {
-    return (
-        <>
-            <h1 className='bg-primaryone-100'>Este es el Login</h1>    
-            <Loader isLoading={false}/>
-        </>
-    )
-}
+  return (
+    <>
+      <LoginForm />
+    </>
+  );
+};
+
 
 export default Login
